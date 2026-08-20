@@ -1,0 +1,2 @@
+# DeckyPowerHost listens on this TCP port after the service is restarted.
+port = 47991

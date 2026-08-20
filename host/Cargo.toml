@@ -1,0 +1,49 @@
+[package]
+name = "decky-power-host"
+version = "0.1.0"
+edition = "2024"
+license = "BSD-3-Clause"
+description = "Native Windows companion for Decky Remote PC Power"
+
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1"
+axum = "0.8"
+bytes = "1.10"
+chacha20poly1305 = "0.10"
+hex = "0.4"
+hkdf = "0.12"
+hmac = "0.12"
+hostname = "0.4"
+prost = "0.14"
+rand = "0.9"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+spake2 = "0.4"
+thiserror = "2.0"
+tokio = { version = "1.47", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+toml = "0.9"
+tower = { version = "0.5", features = ["util"] }
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = { version = "1.18", features = ["v4", "serde"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_Security",
+  "Win32_Security_Cryptography",
+  "Win32_System_Memory",
+  "Win32_System_Shutdown",
+  "Win32_System_Threading",
+] }
+windows-service = "0.8"
+
+[build-dependencies]
+prost-build = "0.14"
+protoc-bin-vendored = "3.2"
+
+[dev-dependencies]
+tempfile = "3.21"

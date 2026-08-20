@@ -1,0 +1,2 @@
+# Development default. Production uses the file installed beside the EXE.
+port = 47991

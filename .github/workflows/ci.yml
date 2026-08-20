@@ -1,0 +1,46 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  decky:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: python3 -m pip install --requirement backend/requirements.txt --target py_modules
+      - run: npm run build
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run visual
+      - uses: actions/upload-artifact@v4
+        with: { name: decky-plugin-dist, path: dist/index.js }
+
+  windows-host:
+    runs-on: windows-latest
+    defaults:
+      run: { working-directory: host }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: rustfmt, clippy }
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+      - run: cargo build --release --target x86_64-pc-windows-msvc
+      - uses: crazy-max/ghaction-chocolatey@v3
+        with: { args: install innosetup --yes --no-progress }
+      - shell: pwsh
+        working-directory: .
+        run: iscc installer/DeckyPowerHost.iss
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DeckyPowerHost-Windows
+          path: |
+            host/target/x86_64-pc-windows-msvc/release/decky-power-host.exe
+            installer/out/DeckyPowerHost-Setup.exe
