@@ -12,6 +12,20 @@ Stop  → authenticated DeckyPowerHost request → Windows shutdown API
 Everything stays on the local network. There are no accounts, cloud services,
 telemetry, or generic remote-command endpoints.
 
+## Repository layout
+
+```text
+decky/          Decky plugin frontend, backend, tests, and UI preview
+host/           Rust DeckyPowerHost service and Windows installer
+proto/          Shared Protocol Buffers contract
+docs/           Architecture and Windows validation documentation
+scripts/        Repository build entry points
+out/            All generated distributable artifacts
+```
+
+The plugin and Windows host are deliberately self-contained. Only the versioned
+Protobuf contract is shared between them.
+
 ## Requirements
 
 Steam Deck:
@@ -172,6 +186,7 @@ is required. The protocol source remains [decky_power.proto](proto/decky_power.p
 ```bash
 git clone <repository-url>
 cd decky-my-rig
+cd decky
 npm install
 npm run backend:deps
 npm run build
@@ -179,7 +194,8 @@ npm test
 npm run zip
 ```
 
-The frontend artifact is `dist/index.js`; the installable plugin is
+The frontend artifact is `decky/dist/index.js`; all distributable artifacts are
+collected in the repository-level `out/` directory. The installable plugin is
 `out/RemotePCPower.zip`. The ZIP command checks that pinned Python dependencies
 were bundled first. For live Decky development, install and
 configure the official Decky CLI, then use its plugin build/deploy commands from
@@ -194,9 +210,9 @@ npx playwright install --with-deps chromium
 npm run visual
 ```
 
-This starts a localhost-only Vite preview, renders the real Quick Access row and
-form components with mock PCs at Deck-sized dimensions, and writes
-`artifacts/ui/decky-ui.png`. It never contacts a host or handles credentials.
+Run this from `decky/`. It starts a localhost-only Vite preview, renders the real
+Quick Access row and form components with mock PCs at Deck-sized dimensions, and
+writes `out/ui/decky-ui.png`. It never contacts a host or handles credentials.
 
 ### Test the portable Rust host safely
 

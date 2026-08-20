@@ -6,11 +6,11 @@ Only the backend can access credentials or the network protocol.
 
 ## Repository layout
 
-- `src/`: strict TypeScript Quick Access and settings UI.
-- `main.py` and `py_modules/decky_power/`: Decky backend.
+- `decky/src/`: strict TypeScript Quick Access and settings UI.
+- `decky/main.py` and `decky/py_modules/decky_power/`: Decky backend.
 - `proto/`: the versioned wire contract shared by both implementations.
 - `host/`: portable Rust server core and narrowly gated Windows integration.
-- `installer/`: Inno Setup installer.
+- `host/installer/`: Inno Setup installer owned by the Windows host.
 - `docs/`: protocol, security, and validation documentation.
 
 ## Device and persistence model

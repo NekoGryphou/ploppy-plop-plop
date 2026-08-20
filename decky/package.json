@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit && vite build",
-    "backend:deps": "bash scripts/build-decky-deps.sh",
+    "backend:deps": "../scripts/build-decky-deps.sh",
     "dev": "vite build --watch",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run && PYTHONPATH=py_modules python3 -B -m unittest discover -s tests/backend -v",
@@ -13,7 +13,7 @@
     "test:backend": "PYTHONPATH=py_modules python3 -B -m unittest discover -s tests/backend -v",
     "visual": "playwright test --config mockup/playwright.config.ts",
     "visual:serve": "vite --config mockup/vite.config.ts",
-    "zip": "bash scripts/build-plugin.sh",
+    "zip": "../scripts/build-plugin.sh",
     "check": "pnpm run lint && pnpm run test && pnpm run build"
   },
   "dependencies": {

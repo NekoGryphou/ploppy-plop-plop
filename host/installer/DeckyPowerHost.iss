@@ -10,7 +10,7 @@ DefaultDirName={autopf}\DeckyPowerHost
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
-OutputDir=..\out
+OutputDir=..\..\out
 OutputBaseFilename=DeckyPowerHost-Setup
 Compression=lzma2
 SolidCompression=yes
@@ -18,7 +18,7 @@ UninstallDisplayName=DeckyPowerHost
 SetupLogging=yes
 
 [Files]
-Source: "..\host\target\x86_64-pc-windows-msvc\release\decky-power-host.exe"; DestDir: "{app}"; DestName: "DeckyPowerHost.exe"; Flags: ignoreversion
+Source: "..\target\x86_64-pc-windows-msvc\release\decky-power-host.exe"; DestDir: "{app}"; DestName: "DeckyPowerHost.exe"; Flags: ignoreversion
 Source: "DeckyPowerHost.toml"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall
 
 [Run]

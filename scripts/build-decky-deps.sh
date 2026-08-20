@@ -2,8 +2,8 @@
 set -euo pipefail
 
 project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-requirements="$project_dir/backend/requirements.txt"
-target="$project_dir/py_modules"
+requirements="$project_dir/decky/backend/requirements.txt"
+target="$project_dir/decky/py_modules"
 
 version_of() {
   sed -n "s/^$1==//p" "$requirements"

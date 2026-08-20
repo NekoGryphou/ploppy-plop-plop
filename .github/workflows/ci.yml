@@ -8,16 +8,18 @@ on:
 jobs:
   decky:
     runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: decky }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
+        with: { node-version: 22, cache: npm, cache-dependency-path: decky/package-lock.json }
       - run: npm ci
-      - run: npm run backend:deps
+      - run: ../scripts/build-decky-deps.sh
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run visual
-      - run: npm run zip
+      - run: ../scripts/build-plugin.sh
       - uses: actions/upload-artifact@v4
         with: { name: RemotePCPower-Decky, path: out/RemotePCPower.zip }
 
@@ -42,7 +44,7 @@ jobs:
         with: { args: install innosetup --yes --no-progress }
       - shell: pwsh
         working-directory: .
-        run: iscc installer/DeckyPowerHost.iss
+        run: iscc host/installer/DeckyPowerHost.iss
       - uses: actions/upload-artifact@v4
         with:
           name: DeckyPowerHost-Windows

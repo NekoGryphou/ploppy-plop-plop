@@ -23,5 +23,5 @@ if (-not (Test-Path $InnoSetup)) {
 if (-not (Test-Path $InnoSetup)) {
     throw "Inno Setup was not found. Install it from https://jrsoftware.org/isdl.php"
 }
-& $InnoSetup (Join-Path $ProjectDirectory "installer\DeckyPowerHost.iss")
+& $InnoSetup (Join-Path $ProjectDirectory "host\installer\DeckyPowerHost.iss")
 Write-Host "Windows artifacts created in $OutputDirectory"
