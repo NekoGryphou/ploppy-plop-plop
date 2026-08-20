@@ -4,5 +4,5 @@ test("captures Quick Access and Add PC states", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Gaming PC")).toBeVisible();
   await expect(page.getByText("Host port")).toBeVisible();
-  await page.screenshot({ path: "../out/ui/decky-ui.png", fullPage: true });
+  await page.screenshot({ path: "../out/tests/decky-ui.png", fullPage: true });
 });

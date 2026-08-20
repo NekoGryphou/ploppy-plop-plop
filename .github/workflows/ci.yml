@@ -21,7 +21,7 @@ jobs:
       - run: npm run visual
       - run: ../scripts/build-plugin.sh
       - uses: actions/upload-artifact@v4
-        with: { name: RemotePCPower-Decky, path: out/RemotePCPower.zip }
+        with: { name: RemotePCPower-Decky, path: out/plugin/RemotePCPower.zip }
 
   windows-host:
     runs-on: windows-latest
@@ -38,8 +38,8 @@ jobs:
       - shell: pwsh
         working-directory: .
         run: |
-          New-Item -ItemType Directory -Force out | Out-Null
-          Copy-Item host/target/x86_64-pc-windows-msvc/release/decky-power-host.exe out/DeckyPowerHost.exe
+          New-Item -ItemType Directory -Force out/host | Out-Null
+          Copy-Item host/target/x86_64-pc-windows-msvc/release/decky-power-host.exe out/host/DeckyPowerHost.exe
       - uses: crazy-max/ghaction-chocolatey@v3
         with: { args: install innosetup --yes --no-progress }
       - shell: pwsh
@@ -49,5 +49,5 @@ jobs:
         with:
           name: DeckyPowerHost-Windows
           path: |
-            out/DeckyPowerHost.exe
-            out/DeckyPowerHost-Setup.exe
+            out/host/DeckyPowerHost.exe
+            out/host/DeckyPowerHost-Setup.exe

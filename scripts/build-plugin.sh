@@ -5,7 +5,7 @@ project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 staging_dir="$(mktemp -d)"
 trap 'rm -rf "$staging_dir"' EXIT
 package_dir="$staging_dir/RemotePCPower"
-archive="$project_dir/out/RemotePCPower.zip"
+archive="$project_dir/out/plugin/RemotePCPower.zip"
 decky_dir="$project_dir/decky"
 
 if [[ ! -d "$decky_dir/py_modules/spake2" || ! -d "$decky_dir/py_modules/cryptography" ]]; then
@@ -14,6 +14,7 @@ if [[ ! -d "$decky_dir/py_modules/spake2" || ! -d "$decky_dir/py_modules/cryptog
 fi
 
 npm --prefix "$decky_dir" run build
+mkdir -p "$(dirname "$archive")"
 rm -f "$archive"
 mkdir -p "$package_dir/dist"
 cp "$decky_dir/dist/index.js" "$package_dir/dist/index.js"

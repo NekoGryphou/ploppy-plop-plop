@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 $ProjectDirectory = Split-Path -Parent $PSScriptRoot
-$OutputDirectory = Join-Path $ProjectDirectory "out"
+$OutputDirectory = Join-Path $ProjectDirectory "out\host"
 $HostDirectory = Join-Path $ProjectDirectory "host"
 $HostExecutable = Join-Path $HostDirectory "target\x86_64-pc-windows-msvc\release\decky-power-host.exe"
 

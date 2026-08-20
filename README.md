@@ -20,7 +20,9 @@ host/           Rust DeckyPowerHost service and Windows installer
 proto/          Shared Protocol Buffers contract
 docs/           Architecture and Windows validation documentation
 scripts/        Repository build entry points
-out/            All generated distributable artifacts
+out/host/       Windows host executable and installer
+out/plugin/     Installable Decky plugin ZIP
+out/tests/      UI screenshots and other generated test evidence
 ```
 
 The plugin and Windows host are deliberately self-contained. Only the versioned
@@ -196,7 +198,7 @@ npm run zip
 
 The frontend artifact is `decky/dist/index.js`; all distributable artifacts are
 collected in the repository-level `out/` directory. The installable plugin is
-`out/RemotePCPower.zip`. The ZIP command checks that pinned Python dependencies
+`out/plugin/RemotePCPower.zip`. The ZIP command checks that pinned Python dependencies
 were bundled first. For live Decky development, install and
 configure the official Decky CLI, then use its plugin build/deploy commands from
 the repository root as documented by the
@@ -212,7 +214,7 @@ npm run visual
 
 Run this from `decky/`. It starts a localhost-only Vite preview, renders the real
 Quick Access row and form components with mock PCs at Deck-sized dimensions, and
-writes `out/ui/decky-ui.png`. It never contacts a host or handles credentials.
+writes `out/tests/decky-ui.png`. It never contacts a host or handles credentials.
 
 ### Test the portable Rust host safely
 
@@ -243,8 +245,8 @@ powershell -ExecutionPolicy Bypass -File scripts\build-windows.ps1
 Artifacts:
 
 ```text
-out\DeckyPowerHost.exe
-out\DeckyPowerHost-Setup.exe
+out\host\DeckyPowerHost.exe
+out\host\DeckyPowerHost-Setup.exe
 ```
 
 Do not install the service, modify the firewall, or test real shutdown from WSL.
