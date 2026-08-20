@@ -179,6 +179,8 @@ toolchains from their official sources:
 - [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/)
   with “Desktop development with C++” for native MSVC builds
 - [Inno Setup](https://jrsoftware.org/isdl.php) for the Windows installer
+- [Windows Package Manager](https://learn.microsoft.com/windows/package-manager/winget/)
+  for the optional one-command Windows toolchain setup
 
 The Rust build downloads a pinned vendored `protoc`; no system Protobuf compiler
 is required. The protocol source remains [decky_power.proto](proto/decky_power.proto).
@@ -247,6 +249,47 @@ Artifacts:
 ```text
 out\host\DeckyPowerHost.exe
 out\host\DeckyPowerHost-Setup.exe
+```
+
+### Build everything locally from WSL
+
+GitHub Actions is a clean-environment verifier, not a build requirement. From
+the repository root, install the official Windows build tools once:
+
+```bash
+./scripts/setup-local.sh
+```
+
+The setup script uses the official tools provided through `winget` packages
+[`Rustlang.Rustup`](https://rustup.rs/),
+[`Microsoft.VisualStudio.2022.BuildTools`](https://visualstudio.microsoft.com/downloads/),
+and [`JRSoftware.InnoSetup`](https://jrsoftware.org/isdl.php). It installs the
+stable Rust MSVC target, rustfmt, and Clippy. It does not install or start
+DeckyPowerHost, create a service, alter the firewall, or execute the installer.
+
+Then build and test everything locally:
+
+```bash
+./scripts/build-local.sh
+```
+
+This performs a reproducible Decky dependency install, frontend/backend tests,
+plugin packaging, UI screenshot validation, native Windows tests and release
+linking, and Inno Setup compilation. Use `./scripts/build-local.sh --skip-ui`
+only when Chromium/Playwright system dependencies are intentionally unavailable.
+All final output remains under:
+
+```text
+out/host/
+out/plugin/
+out/tests/
+```
+
+On a normal native Windows clone, run the same host build directly:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\setup-windows-build.ps1
+powershell -ExecutionPolicy Bypass -File scripts\build-windows.ps1
 ```
 
 Do not install the service, modify the firewall, or test real shutdown from WSL.
