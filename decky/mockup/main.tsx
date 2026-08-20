@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { FaPowerOff } from "react-icons/fa";
+import { FaChevronLeft, FaPowerOff } from "react-icons/fa";
 import { DeviceRow } from "../src/components/DeviceRow";
 import { DeviceForm } from "../src/components/DeviceForm";
 import { TitleView } from "../src/components/TitleView";
@@ -23,7 +23,7 @@ function Showcase() {
             </div>
         </div>
         <div className="deck settings">
-            <header><h1>Add PC</h1></header>
+            <header><button aria-label="Back to Remote PCs" className="back"><FaChevronLeft aria-hidden="true"/></button><h1>Add PC</h1></header>
             <div className="content"><DeviceForm onSaved={() => undefined} onCancel={() => undefined}/></div>
         </div>
     </main>;

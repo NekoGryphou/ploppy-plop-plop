@@ -36,6 +36,7 @@ export function MacAddressField(props: MacAddressFieldProps): JSX.Element {
     label="Enter MAC address manually"
     description={props.overridden
       ? <TextField
+          style={{ width: "100%" }}
           value={props.address}
           disabled={props.busy}
           onChange={(event) => props.onAddressChange(event.target.value)}/>

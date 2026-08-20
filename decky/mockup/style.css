@@ -15,6 +15,9 @@ button { border: 0; border-radius: 3px; padding: 10px 15px; color: white; backgr
 button:focus { outline: 3px solid white; outline-offset: 2px; } button:disabled { opacity: .46; }
 .settings { width: 500px; } .settings .content { padding-top: 4px; }
 .field { display: grid; grid-template-columns: 42% 58%; align-items: center; padding: 8px 0; gap: 12px; }
+.field-below { grid-template-columns: 1fr; gap: 6px; }
+.field-below > * { grid-column: 1; }
 .field > span { font-size: 15px; color: white; }
+.back { width: 42px; min-width: 42px; padding: 10px; }
 input { width: 100%; background: #0e141b; border: 1px solid #ffffff22; border-radius: 3px; padding: 10px; color: white; font: inherit; }
 p, li { color: #c7d5e0; line-height: 1.35; }
