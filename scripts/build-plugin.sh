@@ -14,6 +14,14 @@ if [[ ! -d "$decky_dir/py_modules/spake2" || ! -d "$decky_dir/py_modules/cryptog
 fi
 
 npm --prefix "$decky_dir" run build
+if grep -q "DECKY_API" "$decky_dir/dist/index.js"; then
+  echo "Plugin bundle incorrectly depends on a nonexistent DECKY_API runtime global." >&2
+  exit 1
+fi
+if ! grep -q "__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit" "$decky_dir/dist/index.js"; then
+  echo "Plugin bundle does not contain the current @decky/api loader connection." >&2
+  exit 1
+fi
 mkdir -p "$(dirname "$archive")"
 rm -f "$archive"
 mkdir -p "$package_dir/dist"
