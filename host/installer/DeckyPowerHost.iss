@@ -22,12 +22,15 @@ Source: "..\target\x86_64-pc-windows-msvc\release\decky-power-host.exe"; DestDir
 Source: "DeckyPowerHost.toml"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall
 
 [Run]
-Filename: "{sys}\sc.exe"; Parameters: "create DeckyPowerHost binPath= ""{app}\DeckyPowerHost.exe"" start= auto DisplayName= ""DeckyPowerHost"""; Flags: runhidden waituntilterminated; Check: not ServiceExists
-Filename: "{sys}\sc.exe"; Parameters: "config DeckyPowerHost binPath= ""{app}\DeckyPowerHost.exe"" start= auto"; Flags: runhidden waituntilterminated; Check: ServiceExists
+Filename: "{sys}\sc.exe"; Parameters: "create DeckyPowerHost binPath= ""\""{app}\DeckyPowerHost.exe\"" --service"" start= auto DisplayName= ""DeckyPowerHost"""; Flags: runhidden waituntilterminated; Check: not ServiceExists
+Filename: "{sys}\sc.exe"; Parameters: "config DeckyPowerHost binPath= ""\""{app}\DeckyPowerHost.exe\"" --service"" start= auto"; Flags: runhidden waituntilterminated; Check: ServiceExists
 Filename: "{sys}\sc.exe"; Parameters: "failure DeckyPowerHost reset= 86400 actions= restart/5000/restart/15000"; Flags: runhidden waituntilterminated
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""DeckyPowerHost"""; Flags: runhidden waituntilterminated
 Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""DeckyPowerHost"" dir=in action=allow protocol=TCP localport={code:GetConfiguredPort} profile=private program=""{app}\DeckyPowerHost.exe"" enable=yes"; Flags: runhidden waituntilterminated
 Filename: "{sys}\sc.exe"; Parameters: "start DeckyPowerHost"; Flags: runhidden waituntilterminated
+
+[Icons]
+Name: "{group}\DeckyPowerHost - Pair a Steam Deck"; Filename: "{app}\DeckyPowerHost.exe"; WorkingDir: "{app}"
 
 [UninstallRun]
 Filename: "{sys}\sc.exe"; Parameters: "stop DeckyPowerHost"; Flags: runhidden waituntilterminated; RunOnceId: "StopService"

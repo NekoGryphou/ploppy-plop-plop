@@ -15,6 +15,10 @@ commit, installer version, Decky Loader version, and network profile first.
 - [ ] Confirm the `DeckyPowerHost` inbound firewall rule is TCP 47991 and Private only.
 - [ ] Confirm the rule does not allow Public-profile traffic.
 - [ ] Confirm Setup displays a six-digit temporary pairing code without exposing a long-term secret.
+- [ ] Launch `DeckyPowerHost.exe` as a standard user, approve UAC, and confirm a
+      fresh pairing code is shown without a logging panic.
+- [ ] Confirm the Start-menu **DeckyPowerHost - Pair a Steam Deck** shortcut opens
+      the same pairing helper after installation.
 - [ ] Pair from Decky on port 47991 and confirm authenticated status succeeds.
 - [ ] Confirm an incorrect pairing code fails and does not leave the host paired.
 - [ ] Change TOML to `port = 48100`, rerun Setup to synchronize the firewall rule, then restart the service.

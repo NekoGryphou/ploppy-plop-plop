@@ -15,8 +15,8 @@ export function Settings(): JSX.Element {
   const remove = (device: Device): void => {
     showModal(<ConfirmModal strTitle="Delete PC?" strDescription={`Remove ${device.name} and its pairing credential from this Steam Deck?`} strOKButtonText="Delete" bDestructiveWarning onOK={() => { void deleteDevice(device.id).then(load); }}/>, window);
   };
-  if (editing) return <div>
-    <Focusable flow-children="horizontal" style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+  if (editing) return <div style={{ paddingBottom: "16px" }}>
+    <Focusable flow-children="horizontal" style={{ display: "flex", alignItems: "center", gap: "12px", position: "sticky", top: 0, zIndex: 10, padding: "12px 0", background: "#0e141b" }}>
       <DialogButton
         aria-label="Back to Remote PCs"
         onClick={() => setEditing(undefined)}

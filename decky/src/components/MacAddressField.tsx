@@ -32,18 +32,21 @@ export interface MacAddressFieldProps {
 * @returns A native Decky field with a controller-focusable toggle and action.
 */
 export function MacAddressField(props: MacAddressFieldProps): JSX.Element {
-  return <Field
-    label="Enter MAC address manually"
-    description={props.overridden
-      ? <TextField
+  return <>
+    <Field label="MAC address" childrenContainerWidth="max" bottomSeparator="none" padding="compact">
+      {props.overridden
+        ? <TextField
           style={{ width: "100%" }}
           value={props.address}
           disabled={props.busy}
           onChange={(event) => props.onAddressChange(event.target.value)}/>
-      : <div>
-          <p style={{ marginTop: 0 }}>Detected address: {props.address || "Not detected"}</p>
-          <DialogButton disabled={props.busy || !props.canDetect} onClick={props.onDetect}>Detect MAC</DialogButton>
-        </div>}>
-    <Toggle value={props.overridden} disabled={props.busy} onChange={props.onOverrideChange}/>
-  </Field>;
+        : <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%" }}>
+            <span style={{ flex: 1 }}>{props.address || "Not detected"}</span>
+            <DialogButton aria-label="Detect MAC" style={{ width: "auto", minWidth: "130px" }} disabled={props.busy || !props.canDetect} onClick={props.onDetect}>Detect</DialogButton>
+          </div>}
+    </Field>
+    <Field label="Enter MAC manually" bottomSeparator="none" padding="compact">
+      <Toggle value={props.overridden} disabled={props.busy} onChange={props.onOverrideChange}/>
+    </Field>
+  </>;
 }

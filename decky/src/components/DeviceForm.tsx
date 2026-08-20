@@ -6,10 +6,9 @@ import { MacAddressField } from "./MacAddressField";
 
 const empty: DeviceInput = { name: "", address: "", mac: "", macOverridden: false, port: "47991", broadcastAddress: "" };
 
-function FullWidthField({ label, children }: { label: string; children: JSX.Element }): JSX.Element {
+function FormField({ label, children }: { label: string; children: JSX.Element }): JSX.Element {
   return <Field
     label={label}
-    childrenLayout="below"
     childrenContainerWidth="max"
     bottomSeparator="none"
     padding="compact">
@@ -65,8 +64,8 @@ export function DeviceForm({ device, onSaved, onCancel }: { device?: Device; onS
 
   return <div>
     <p>DeckyPowerHost is required for status and shutdown. Starting uses Wake-on-LAN.</p>
-    <FullWidthField label="Name"><TextField style={{ width: "100%" }} value={values.name} onChange={set("name")} disabled={busy}/></FullWidthField>
-    <FullWidthField label="Address"><TextField style={{ width: "100%" }} value={values.address} onChange={set("address")} disabled={busy}/></FullWidthField>
+    <FormField label="Name"><TextField style={{ width: "100%" }} value={values.name} onChange={set("name")} disabled={busy}/></FormField>
+    <FormField label="Address"><TextField style={{ width: "100%" }} value={values.address} onChange={set("address")} disabled={busy}/></FormField>
     <MacAddressField
       address={values.mac}
       overridden={values.macOverridden}
@@ -75,9 +74,9 @@ export function DeviceForm({ device, onSaved, onCancel }: { device?: Device; onS
       onAddressChange={(mac) => setValues((current) => ({ ...current, mac }))}
       onOverrideChange={(macOverridden) => setValues((current) => ({ ...current, macOverridden }))}
       onDetect={() => { setBusy(true); void detect().finally(() => setBusy(false)); }}/>
-    <FullWidthField label="Host port"><TextField style={{ width: "100%" }} value={values.port} onChange={set("port")} disabled={busy} inputMode="numeric"/></FullWidthField>
-    <FullWidthField label="Broadcast address (optional)"><TextField style={{ width: "100%" }} value={values.broadcastAddress} onChange={set("broadcastAddress")} disabled={busy}/></FullWidthField>
-    <FullWidthField label="Pairing code (required for a new PC)"><TextField style={{ width: "100%" }} value={pairingCode} onChange={(event) => setPairingCode(event.target.value)} disabled={busy} inputMode="numeric"/></FullWidthField>
+    <FormField label="Host port"><TextField style={{ width: "100%" }} value={values.port} onChange={set("port")} disabled={busy} inputMode="numeric"/></FormField>
+    <FormField label="Broadcast address (optional)"><TextField style={{ width: "100%" }} value={values.broadcastAddress} onChange={set("broadcastAddress")} disabled={busy}/></FormField>
+    <FormField label="Pairing code"><TextField style={{ width: "100%" }} value={pairingCode} onChange={(event) => setPairingCode(event.target.value)} disabled={busy} inputMode="numeric"/></FormField>
     {message && <p role="alert">{message}</p>}
     <Focusable flow-children="horizontal" style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
       <DialogButton disabled={busy} onClick={onCancel}>Cancel</DialogButton>

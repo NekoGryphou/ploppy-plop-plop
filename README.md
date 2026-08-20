@@ -53,7 +53,11 @@ SSH keys required. No Windows password is stored on the Steam Deck.
    create a Private-profile firewall rule.
 3. Setup displays a temporary six-digit pairing code. Leave that dialog visible.
 
-The service has no desktop UI after setup and starts automatically with Windows.
+The service has no persistent desktop UI after setup and starts automatically
+with Windows. Launching `DeckyPowerHost.exe` normally opens an elevated pairing
+helper and shows a fresh five-minute code whenever the host is not yet paired.
+The Start-menu shortcut **DeckyPowerHost - Pair a Steam Deck** does the same, so
+the installer dialog is not the only place the code is available.
 
 ### Decky plugin
 
@@ -152,8 +156,10 @@ packets on UDP ports 9 and 7; DeckyPowerHost is not involved in startup.
   Private firewall rule.
 - **Port already in use:** choose another valid TOML port, rerun Setup, restart
   the service, and update Decky.
-- **Pairing fails:** use `DeckyPowerHost.exe --pairing-code` in an elevated
-  terminal for an unpaired host. If the Deck lost an existing credential, use
+- **Pairing fails:** launch `DeckyPowerHost.exe` or the Start-menu pairing
+  shortcut to generate a fresh five-minute code. Windows requests elevation
+  because pairing state is protected from ordinary processes. If the Deck lost
+  an existing credential, use
   `DeckyPowerHost.exe --reset-pairing`, restart the service, and retry promptly.
   Resetting invalidates the previous Deck credential.
 - **Authentication fails:** use **Pair again**; an address may point to another

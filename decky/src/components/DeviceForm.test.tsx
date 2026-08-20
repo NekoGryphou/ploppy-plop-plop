@@ -36,8 +36,8 @@ describe("DeviceForm", () => {
     vi.mocked(discoverMac).mockResolvedValue({ ok: true, mac: "AA:BB:CC:DD:EE:FF", message: "Detected." });
     render(<DeviceForm onSaved={vi.fn()} onCancel={vi.fn()}/>);
     fireEvent.change(screen.getByLabelText("Address"), { target: { value: "gaming.local" } });
-    fireEvent.click(screen.getByText("Detect MAC"));
-    expect(await screen.findByText("Detected address: AA:BB:CC:DD:EE:FF")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Detect MAC" }));
+    expect(await screen.findByText("AA:BB:CC:DD:EE:FF")).toBeInTheDocument();
     expect(discoverMac).toHaveBeenCalledWith("gaming.local", "47991");
     fireEvent.click(screen.getByLabelText("Manual MAC"));
     expect(screen.getByDisplayValue("AA:BB:CC:DD:EE:FF")).toBeInTheDocument();
