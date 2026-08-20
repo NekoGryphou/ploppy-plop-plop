@@ -207,6 +207,10 @@ the repository root as documented by the
 [official template](https://github.com/SteamDeckHomebrew/decky-plugin-template)
 and [development guide](https://wiki.deckbrew.xyz/en/loader-dev/development).
 
+GitHub Actions uploads the assembled `RemotePCPower/` directory rather than
+uploading this ZIP as a file. GitHub's artifact download is therefore directly
+usable and does not contain another ZIP inside it.
+
 ### Review the UI without a Steam Deck
 
 ```bash

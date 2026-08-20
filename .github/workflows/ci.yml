@@ -20,8 +20,12 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run visual
       - run: ../scripts/build-plugin.sh
+      - name: Stage plugin for GitHub artifact
+        run: python3 -m zipfile -e ../out/plugin/RemotePCPower.zip ../out/plugin/ci
       - uses: actions/upload-artifact@v4
-        with: { name: RemotePCPower-Decky, path: out/plugin/RemotePCPower.zip }
+        with:
+          name: RemotePCPower
+          path: out/plugin/ci
 
   windows-host:
     runs-on: windows-latest
