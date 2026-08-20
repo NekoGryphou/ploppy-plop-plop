@@ -219,21 +219,16 @@ Open **x64 Native Tools Command Prompt for VS 2022**, then:
 
 ```bat
 git clone <repository-url>
-cd decky-my-rig\host
+cd decky-my-rig
 rustup target add x86_64-pc-windows-msvc
-cargo fmt --check
-cargo clippy --all-targets -- -D warnings
-cargo test
-cargo build --release --target x86_64-pc-windows-msvc
-cd ..
-"C:\Program Files (x86)\Inno Setup 7\ISCC.exe" installer\DeckyPowerHost.iss
+powershell -ExecutionPolicy Bypass -File scripts\build-windows.ps1
 ```
 
 Artifacts:
 
 ```text
-host\target\x86_64-pc-windows-msvc\release\decky-power-host.exe
-installer\out\DeckyPowerHost-Setup.exe
+out\DeckyPowerHost.exe
+out\DeckyPowerHost-Setup.exe
 ```
 
 Do not install the service, modify the firewall, or test real shutdown from WSL.
