@@ -11,8 +11,12 @@ cleanup() {
 trap cleanup EXIT
 
 printf 'port = 47991\n' > "$test_dir/DeckyMyRigHost.toml"
+host_executable="${DECKY_MY_RIG_HOST_EXECUTABLE:-$project_dir/host/target/debug/decky-my-rig-host}"
+client_executable="${DECKY_MY_RIG_TEST_EXECUTABLE:-$project_dir/tools/decky-my-rig-test/target/debug/decky-my-rig-test}"
+[[ -x "$host_executable" ]] || { echo "Missing host test executable: $host_executable" >&2; exit 1; }
+[[ -x "$client_executable" ]] || { echo "Missing protocol client executable: $client_executable" >&2; exit 1; }
 
-cargo run --manifest-path "$project_dir/host/Cargo.toml" -- \
+"$host_executable" \
   --dev --mock-shutdown \
   --ephemeral-port \
   --config "$test_dir/DeckyMyRigHost.toml" \
@@ -31,7 +35,7 @@ for _ in {1..50}; do
 done
 [[ -n "$port" ]] || { cat "$test_dir/host.log" >&2; exit 1; }
 
-client=(cargo run --quiet --manifest-path "$project_dir/tools/decky-my-rig-test/Cargo.toml" --)
+client=("$client_executable")
 credential="$test_dir/credential.json"
 "${client[@]}" pair --host 127.0.0.1 --port "$port" --code "483 921" --credential-file "$credential"
 "${client[@]}" status --host 127.0.0.1 --port "$port" --credential-file "$credential"

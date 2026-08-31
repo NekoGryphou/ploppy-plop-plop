@@ -11,8 +11,9 @@ cleanup() {
 trap cleanup EXIT
 
 printf 'port = 47991\n' > "$test_dir/DeckyMyRigHost.toml"
-cargo build --quiet --manifest-path "$project_dir/host/Cargo.toml"
-"$project_dir/host/target/debug/decky-my-rig-host" \
+host_executable="${DECKY_MY_RIG_HOST_EXECUTABLE:-$project_dir/host/target/debug/decky-my-rig-host}"
+[[ -x "$host_executable" ]] || { echo "Missing host test executable: $host_executable" >&2; exit 1; }
+"$host_executable" \
   --dev --mock-shutdown --ephemeral-port --config "$test_dir/DeckyMyRigHost.toml" \
   --pairing-code-value 739104 > "$test_dir/host.log" 2>&1 &
 host_pid="$!"
