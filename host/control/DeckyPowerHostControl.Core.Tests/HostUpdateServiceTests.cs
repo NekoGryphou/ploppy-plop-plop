@@ -31,7 +31,7 @@ public sealed class HostUpdateServiceTests
         var checksum = Convert.ToHexString(SHA256.HashData(installer)).ToLowerInvariant();
         var service = new HostUpdateService(new HttpClient(new FixtureHandler(checksum, installer)));
 
-        await Assert.ThrowsExceptionAsync<InvalidDataException>(() => service.DownloadUpdateAsync("1.2.3", _ => false));
+        await Assert.ThrowsExactlyAsync<InvalidDataException>(() => service.DownloadUpdateAsync("1.2.3", _ => false));
 
         Assert.IsFalse(File.Exists(Path.Combine(Path.GetTempPath(), "DeckyPowerHost-1.3.0-Setup.exe")));
     }

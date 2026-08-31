@@ -5,7 +5,7 @@ namespace DeckyPowerHostControl.Core.Tests;
 [TestClass]
 public sealed class HostControlViewModelTests
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow("compatible", "Host 1.2.8 • Plugin 1.2.1 • Compatible")]
     [DataRow("update_host", "Update this host to match plugin 1.2.1.")]
     [DataRow("update_plugin", "Update the Decky plugin to match host 1.2.8.")]
