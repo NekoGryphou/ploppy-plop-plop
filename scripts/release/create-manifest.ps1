@@ -1,5 +1,6 @@
 param(
     [Parameter(Mandatory = $true)] [string] $Version,
+    [Parameter(Mandatory = $true)] [string] $ReleaseTag,
     [Parameter(Mandatory = $true)] [string] $ArtifactDirectory,
     [Parameter(Mandatory = $true)] [string] $Repository
 )
@@ -8,12 +9,15 @@ $ErrorActionPreference = "Stop"
 if ($Version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
     throw "Release version must use strict X.Y.Z format."
 }
+if (($ReleaseTag -ne "v$Version") -and ($ReleaseTag -notmatch ('^v' + [Regex]::Escape($Version) + '-alpha\.[1-9]\d*$'))) {
+    throw "Release tag must match the X.Y.Z version or its numbered alpha form."
+}
 $installer = Join-Path $ArtifactDirectory "DeckyMyRig_Host__Windows_x64.exe"
 $plugin = Join-Path $ArtifactDirectory "DekyMyRig_Plugin.zip"
 foreach ($path in @($installer, $plugin)) {
     if (-not (Test-Path $path)) { throw "Release artifact is missing: $path" }
 }
-$base = "https://github.com/$Repository/releases/download/v$Version"
+$base = "https://github.com/$Repository/releases/download/$ReleaseTag"
 $manifest = [ordered]@{
     schemaVersion = 1
     version = $Version
