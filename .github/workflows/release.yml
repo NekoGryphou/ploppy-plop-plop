@@ -39,7 +39,7 @@ jobs:
           targets: x86_64-pc-windows-msvc
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with: { dotnet-version: 8.0.x }
-      - uses: crazy-max/ghaction-chocolatey@2526f467ccbd337d307fe179959cabbeca0bc8c0 # v3
+      - uses: crazy-max/ghaction-chocolatey@dfdcf5bba9c0a16358a21c13a06ec5c89024b3ac # v4.1.0
         with: { args: install innosetup --yes --no-progress }
       - name: Import release signing certificate
         shell: pwsh
