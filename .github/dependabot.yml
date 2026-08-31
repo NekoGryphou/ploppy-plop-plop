@@ -2,22 +2,36 @@ version: 2
 updates:
   - package-ecosystem: cargo
     directory: /host
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    groups: { host-dependencies: { patterns: ["*"] } }
   - package-ecosystem: cargo
     directory: /tools/decky-power-test
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    groups: { protocol-tool-dependencies: { patterns: ["*"] } }
   - package-ecosystem: npm
     directory: /decky
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    groups: { plugin-dependencies: { patterns: ["*"] } }
   - package-ecosystem: pip
     directory: /decky/backend
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    groups: { python-dependencies: { patterns: ["*"] } }
   - package-ecosystem: nuget
     directory: /host/control
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    groups: { control-app-dependencies: { patterns: ["*"] } }
   - package-ecosystem: docker
     directory: /
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    groups: { container-images: { patterns: ["*"] } }
   - package-ecosystem: github-actions
     directory: /
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    groups: { workflow-actions: { patterns: ["*"] } }

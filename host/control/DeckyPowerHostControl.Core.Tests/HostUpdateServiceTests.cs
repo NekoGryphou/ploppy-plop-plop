@@ -1,6 +1,7 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using DeckyPowerHostControl.Core;
 
 namespace DeckyPowerHostControl.Core.Tests;
@@ -41,7 +42,16 @@ public sealed class HostUpdateServiceTests
         {
             if (request.RequestUri!.AbsolutePath.EndsWith("release-manifest.json", StringComparison.Ordinal))
             {
-                var json = $$"""{"schemaVersion":1,"version":"1.3.0","host":{"url":"https://github.com/NekoGryphou/Decky-My-Rig/releases/download/v1.3.0/DeckyPowerHost-Setup.exe","sha256":"{{checksum}}"}}""";
+                var json = JsonSerializer.Serialize(new
+                {
+                    schemaVersion = 1,
+                    version = "1.3.0",
+                    host = new
+                    {
+                        url = "https://github.com/NekoGryphou/Decky-My-Rig/releases/download/v1.3.0/DeckyPowerHost-Setup.exe",
+                        sha256 = checksum,
+                    },
+                });
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) });
             }
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(installer) });
