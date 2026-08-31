@@ -312,6 +312,11 @@ out\control\DeckyMyRigHostControl.exe
 out\host\DeckyMyRig_Host__Windows_x64.exe
 ```
 
+Windows signing is intentionally deferred. The zero-cost open-source signing
+decision, authoritative certificate sources, SmartScreen limitations, and
+future integration checklist are recorded in
+[docs/CODE_SIGNING.md](docs/CODE_SIGNING.md).
+
 ### Build everything locally from WSL
 
 GitHub Actions is a clean-environment verifier, not a build requirement. From

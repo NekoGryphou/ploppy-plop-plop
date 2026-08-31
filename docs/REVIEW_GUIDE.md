@@ -12,6 +12,8 @@ carry compatibility branches.
 - `SECURITY.md`: threat model, secret storage, and dependency policy.
 - `proto/decky_my_rig.proto`: canonical wire contract.
 - `docs/RECOVERY_AUDIT.md`: executed evidence versus physical-hardware gaps.
+- `docs/CODE_SIGNING.md`: deferred signing decision, authoritative certificate
+  sources, and the intended free open-source signing route.
 
 Public reproducible gates:
 
