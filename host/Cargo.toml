@@ -13,20 +13,20 @@ anyhow = "1.0"
 async-trait = "0.1"
 axum = "0.8"
 bytes = "1.10"
-chacha20poly1305 = "0.10"
+chacha20poly1305 = "0.11"
 hex = "0.4"
-hkdf = "0.12"
-hmac = "0.12"
+hkdf = "0.13"
+hmac = "0.13"
 hostname = "0.4"
 prost = "0.14"
-rand = "0.9"
+rand = "0.10"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-sha2 = "0.10"
+sha2 = "0.11"
 spake2 = "0.4"
 thiserror = "2.0"
 tokio = { version = "1.47", features = ["io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
-toml = "0.9"
+toml = "1.1"
 tower = { version = "0.5", features = ["util"] }
 tracing = "0.1"
 tracing-appender = "0.2"
@@ -34,7 +34,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1.18", features = ["v4", "serde"] }
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.61", features = [
+windows = { version = "0.62", features = [
   "Win32_Foundation",
   "Win32_Security",
   "Win32_Security_Authorization",
