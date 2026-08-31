@@ -1,8 +1,10 @@
+import asyncio
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from decky_power.discovery import _find_proc_arp, find_mac
+from decky_power.discovery import DiscoveryError, _find_proc_arp, discover_mac, find_mac
 
 
 class DiscoveryTests(unittest.TestCase):
@@ -19,6 +21,28 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_rejects_invalid_neighbor_mac(self) -> None:
         self.assertEqual(find_mac("192.168.1.42", "192.168.1.42 dev wlan0 FAILED"), "")
+
+    def test_timed_out_neighbor_process_is_killed_and_reaped(self) -> None:
+        async def timeout(awaitable, *, timeout):
+            del timeout
+            awaitable.close()
+            raise TimeoutError
+
+        process = MagicMock()
+        process.communicate = AsyncMock()
+        process.wait = AsyncMock()
+        with (
+            patch("decky_power.discovery._resolve_ipv4", new=AsyncMock(return_value="192.168.1.42")),
+            patch("decky_power.discovery._prime_neighbor", new=AsyncMock()),
+            patch("decky_power.discovery._find_proc_arp", return_value=""),
+            patch("decky_power.discovery.asyncio.create_subprocess_exec", new=AsyncMock(return_value=process)),
+            patch("decky_power.discovery.asyncio.wait_for", new=timeout),
+        ):
+            with self.assertRaises(DiscoveryError):
+                asyncio.run(discover_mac("pc.local", 47991))
+
+        process.kill.assert_called_once_with()
+        process.wait.assert_awaited_once_with()
 
 
 if __name__ == "__main__": unittest.main()

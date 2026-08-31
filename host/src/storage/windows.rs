@@ -1,4 +1,4 @@
-use std::{fs, io, path::PathBuf};
+use std::{fs, io, os::windows::ffi::OsStrExt, path::PathBuf};
 
 use windows::{
     Win32::{
@@ -6,6 +6,7 @@ use windows::{
         Security::Cryptography::{
             CRYPT_INTEGER_BLOB, CRYPTPROTECT_LOCAL_MACHINE, CryptProtectData, CryptUnprotectData,
         },
+        Storage::FileSystem::{MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MoveFileExW},
     },
     core::PCWSTR,
 };
@@ -66,6 +67,23 @@ impl WindowsCredentialStore {
         unsafe { LocalFree(Some(HLOCAL(output.pbData.cast()))) };
         Ok(result)
     }
+
+    fn replace_file(source: &std::path::Path, destination: &std::path::Path) -> io::Result<()> {
+        let source_wide: Vec<u16> = source.as_os_str().encode_wide().chain(Some(0)).collect();
+        let destination_wide: Vec<u16> = destination
+            .as_os_str()
+            .encode_wide()
+            .chain(Some(0))
+            .collect();
+        unsafe {
+            MoveFileExW(
+                PCWSTR(source_wide.as_ptr()),
+                PCWSTR(destination_wide.as_ptr()),
+                MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH,
+            )
+        }
+        .map_err(io::Error::other)
+    }
 }
 
 impl CredentialStore for WindowsCredentialStore {
@@ -85,6 +103,29 @@ impl CredentialStore for WindowsCredentialStore {
         let plaintext = serde_json::to_vec(identity).map_err(io::Error::other)?;
         let temporary = self.path.with_extension("tmp");
         fs::write(&temporary, Self::protect(&plaintext)?)?;
-        fs::rename(temporary, &self.path)
+        Self::replace_file(&temporary, &self.path)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn saving_again_atomically_replaces_existing_dpapi_state() {
+        let directory = tempfile::tempdir().unwrap();
+        let store = WindowsCredentialStore {
+            path: directory.path().join("credentials.dpapi"),
+        };
+        let mut identity = HostIdentity::default();
+        store.save(&identity).unwrap();
+        identity.credential = Some([42_u8; 32]);
+        identity.pairing_code = None;
+        store.save(&identity).unwrap();
+
+        let loaded = store.load_or_create().unwrap();
+        assert_eq!(loaded.credential, Some([42_u8; 32]));
+        assert_eq!(loaded.pairing_code, None);
+        assert!(!store.path.with_extension("tmp").exists());
     }
 }

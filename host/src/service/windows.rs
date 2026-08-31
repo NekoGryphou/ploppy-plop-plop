@@ -59,11 +59,13 @@ fn run_service() -> anyhow::Result<()> {
     let config = HostConfig::load(&config_path)?;
     let store: Arc<dyn CredentialStore> = Arc::new(WindowsCredentialStore::program_data()?);
     let identity = store.load_or_create()?;
+    let latest_client_version = identity.last_client_version.clone();
     let pairing = if let Some(code) = identity.pairing_code.clone() {
         PairingCode::from_code_with_age(
             code,
-            Duration::from_secs(
-                crate::auth::now_unix().saturating_sub(identity.pairing_created_at),
+            crate::management::persisted_code_age(
+                identity.pairing_created_at,
+                crate::auth::now_unix(),
             ),
         )?
     } else {
@@ -85,17 +87,38 @@ fn run_service() -> anyhow::Result<()> {
             power: Arc::new(WindowsPowerController),
             store,
             hostname,
+            latest_client_version: tokio::sync::Mutex::new(latest_client_version),
         });
+        let mut management = tokio::spawn(crate::management_ipc::serve(state.clone(), config.port));
         status_handle.set_service_status(status(
             ServiceState::Running,
             ServiceControlAccept::STOP | ServiceControlAccept::SHUTDOWN,
             0,
         ))?;
-        axum::serve(listener, server::router(state))
-            .with_graceful_shutdown(async move {
-                let _ = tokio::task::spawn_blocking(move || stop_receiver.recv()).await;
-            })
-            .await?;
+        let http = async move {
+            axum::serve(
+                listener,
+                server::router(state).into_make_service_with_connect_info::<std::net::SocketAddr>(),
+            )
+                .with_graceful_shutdown(async move {
+                    let _ = tokio::task::spawn_blocking(move || stop_receiver.recv()).await;
+                })
+                .await
+        };
+        tokio::pin!(http);
+        tokio::select! {
+            server_result = &mut http => {
+                management.abort();
+                server_result?;
+            }
+            management_result = &mut management => {
+                match management_result {
+                    Ok(Ok(())) => anyhow::bail!("local management pipe stopped unexpectedly"),
+                    Ok(Err(error)) => return Err(anyhow::anyhow!("local management pipe failed: {error}")),
+                    Err(error) => return Err(anyhow::anyhow!("local management pipe task failed: {error}")),
+                }
+            }
+        }
         Ok::<(), anyhow::Error>(())
     });
     status_handle.set_service_status(status(

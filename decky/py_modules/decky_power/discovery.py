@@ -34,7 +34,11 @@ async def discover_mac(address: object, port: object) -> str:
             stderr=asyncio.subprocess.DEVNULL,
         )
         stdout, _ = await asyncio.wait_for(process.communicate(), timeout=3)
-    except (FileNotFoundError, TimeoutError):
+    except FileNotFoundError:
+        stdout = b""
+    except TimeoutError:
+        process.kill()
+        await process.wait()
         stdout = b""
     mac = find_mac(ip, stdout.decode("utf-8", errors="replace"))
     if mac:

@@ -8,6 +8,12 @@ use uuid::Uuid;
 pub mod windows;
 
 #[derive(Clone, Serialize, Deserialize)]
+pub struct AcceptedShutdownNonce {
+    pub timestamp: u64,
+    pub nonce: [u8; 16],
+}
+
+#[derive(Clone, Serialize, Deserialize)]
 pub struct HostIdentity {
     pub host_id: Uuid,
     pub credential: Option<[u8; 32]>,
@@ -15,6 +21,12 @@ pub struct HostIdentity {
     pub pairing_code: Option<String>,
     #[serde(default)]
     pub pairing_created_at: u64,
+    #[serde(default)]
+    pub accepted_shutdown_nonces: Vec<AcceptedShutdownNonce>,
+    /// Last strict semantic version observed on an authenticated plugin request.
+    /// This is informational and never participates in pairing authorization.
+    #[serde(default)]
+    pub last_client_version: Option<String>,
 }
 
 impl Default for HostIdentity {
@@ -24,6 +36,8 @@ impl Default for HostIdentity {
             credential: None,
             pairing_code: Some(format!("{:06}", rand::rng().random_range(0..1_000_000))),
             pairing_created_at: crate::auth::now_unix(),
+            accepted_shutdown_nonces: Vec::new(),
+            last_client_version: None,
         }
     }
 }

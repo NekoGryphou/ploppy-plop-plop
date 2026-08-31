@@ -1,3 +1,3 @@
 .PHONY: build
 build:
-	../../scripts/build-decky-deps.sh
+	../../scripts/decky/build-decky-deps.sh

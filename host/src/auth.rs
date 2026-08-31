@@ -10,6 +10,7 @@ use thiserror::Error;
 use tokio::sync::Mutex;
 
 const DOMAIN: &[u8] = b"deckypower-auth-v1\0";
+const RESPONSE_DOMAIN: &[u8] = b"deckypower-response-v1\0";
 pub const CLOCK_WINDOW: Duration = Duration::from_secs(60);
 pub const NONCE_LENGTH: usize = 16;
 
@@ -25,6 +26,8 @@ pub enum AuthError {
     Invalid,
     #[error("too many authentication failures")]
     RateLimited,
+    #[error("authentication state could not be persisted")]
+    Persistence,
 }
 
 pub fn now_unix() -> u64 {
@@ -82,6 +85,51 @@ pub fn sign(
     Ok(mac.finalize().into_bytes().into())
 }
 
+pub fn sign_response(
+    secret: &[u8],
+    request_nonce: &[u8],
+    path: &str,
+    status: u16,
+    body: &[u8],
+) -> Result<[u8; 32], AuthError> {
+    let message = response_message(request_nonce, path, status, body)?;
+    let mut mac = Hmac::<Sha256>::new_from_slice(secret).map_err(|_| AuthError::Malformed)?;
+    mac.update(&message);
+    Ok(mac.finalize().into_bytes().into())
+}
+
+fn response_message(
+    request_nonce: &[u8],
+    path: &str,
+    status: u16,
+    body: &[u8],
+) -> Result<Vec<u8>, AuthError> {
+    if request_nonce.len() != NONCE_LENGTH || !path.is_ascii() {
+        return Err(AuthError::Malformed);
+    }
+    let mut message = Vec::with_capacity(96);
+    message.extend_from_slice(RESPONSE_DOMAIN);
+    append_field(&mut message, request_nonce)?;
+    append_field(&mut message, path.as_bytes())?;
+    message.extend_from_slice(&status.to_be_bytes());
+    message.extend_from_slice(&Sha256::digest(body));
+    Ok(message)
+}
+
+pub fn verify_response(
+    secret: &[u8],
+    request_nonce: &[u8],
+    path: &str,
+    status: u16,
+    body: &[u8],
+    signature: &[u8],
+) -> Result<(), AuthError> {
+    let message = response_message(request_nonce, path, status, body)?;
+    let mut mac = Hmac::<Sha256>::new_from_slice(secret).map_err(|_| AuthError::Malformed)?;
+    mac.update(&message);
+    mac.verify_slice(signature).map_err(|_| AuthError::Invalid)
+}
+
 pub struct Authenticator {
     accepted_nonces: Mutex<HashMap<Vec<u8>, u64>>,
     failures: Mutex<VecDeque<u64>>,
@@ -112,21 +160,8 @@ impl Authenticator {
         request: AuthenticatedRequest<'_>,
         now: u64,
     ) -> Result<(), AuthError> {
-        {
-            let mut failures = self.failures.lock().await;
-            while failures
-                .front()
-                .is_some_and(|seen| now.saturating_sub(*seen) > CLOCK_WINDOW.as_secs())
-            {
-                failures.pop_front();
-            }
-            if failures.len() >= 20 {
-                return Err(AuthError::RateLimited);
-            }
-        }
         if now.abs_diff(request.timestamp) > CLOCK_WINDOW.as_secs() {
-            self.record_failure(now).await;
-            return Err(AuthError::Stale);
+            return Err(self.failed(now, AuthError::Stale).await);
         }
         let mut mac = Hmac::<Sha256>::new_from_slice(secret).map_err(|_| AuthError::Malformed)?;
         let message = match canonical_message(
@@ -138,14 +173,12 @@ impl Authenticator {
         ) {
             Ok(value) => value,
             Err(error) => {
-                self.record_failure(now).await;
-                return Err(error);
+                return Err(self.failed(now, error).await);
             }
         };
         mac.update(&message);
         if mac.verify_slice(request.signature).is_err() {
-            self.record_failure(now).await;
-            return Err(AuthError::Invalid);
+            return Err(self.failed(now, AuthError::Invalid).await);
         }
         let mut nonces = self.accepted_nonces.lock().await;
         nonces.retain(|_, seen| now.saturating_sub(*seen) <= CLOCK_WINDOW.as_secs());
@@ -155,8 +188,19 @@ impl Authenticator {
         Ok(())
     }
 
-    async fn record_failure(&self, now: u64) {
-        self.failures.lock().await.push_back(now);
+    async fn failed(&self, now: u64, error: AuthError) -> AuthError {
+        let mut failures = self.failures.lock().await;
+        while failures
+            .front()
+            .is_some_and(|seen| now.saturating_sub(*seen) > CLOCK_WINDOW.as_secs())
+        {
+            failures.pop_front();
+        }
+        if failures.len() >= 20 {
+            return AuthError::RateLimited;
+        }
+        failures.push_back(now);
+        error
     }
 }
 
@@ -267,6 +311,32 @@ mod tests {
             )
             .await,
             Err(AuthError::RateLimited)
+        );
+
+        let valid_nonce = [5; 16];
+        let valid_signature = sign(&secret, 100, &valid_nonce, "POST", "/v1/status", b"a").unwrap();
+        auth.verify(
+            &secret,
+            request(100, &valid_nonce, &valid_signature, "/v1/status", b"a"),
+            100,
+        )
+        .await
+        .unwrap();
+    }
+
+    #[test]
+    fn response_authentication_binds_nonce_path_status_and_body() {
+        let secret = [4; 32];
+        let nonce = [5; NONCE_LENGTH];
+        let signature = sign_response(&secret, &nonce, "/v1/status", 200, b"body").unwrap();
+        verify_response(&secret, &nonce, "/v1/status", 200, b"body", &signature).unwrap();
+        assert_eq!(
+            verify_response(&secret, &nonce, "/v1/status", 200, b"changed", &signature),
+            Err(AuthError::Invalid)
+        );
+        assert_eq!(
+            verify_response(&secret, &nonce, "/v1/shutdown", 200, b"body", &signature),
+            Err(AuthError::Invalid)
         );
     }
 }

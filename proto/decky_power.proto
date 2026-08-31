@@ -6,6 +6,7 @@ package deckypower.v1;
 // incompatible peer can return a structured error rather than fail decoding.
 message StatusRequest {
   uint32 protocol_version = 1;
+  string client_version = 2;
 }
 
 message StatusResponse {
@@ -22,6 +23,7 @@ message PairRequest {
   bytes client_spake2_message = 2;
   bytes session_id = 3;
   bytes client_confirmation = 4;
+  string client_version = 5;
 }
 
 // encrypted_credential is ChaCha20-Poly1305 ciphertext including its tag.
@@ -38,6 +40,7 @@ message PairResponse {
 
 message ShutdownRequest {
   uint32 protocol_version = 1;
+  string client_version = 2;
 }
 
 message ShutdownResponse {

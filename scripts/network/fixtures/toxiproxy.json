@@ -1,0 +1,8 @@
+[
+  {
+    "name": "host-slow",
+    "listen": "0.0.0.0:48200",
+    "upstream": "host-c:48200",
+    "enabled": true
+  }
+]

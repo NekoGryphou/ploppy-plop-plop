@@ -1,0 +1,12 @@
+{
+  "name": "Decky Power recovery",
+  "build": { "dockerfile": "Dockerfile" },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "28.3.3",
+      "dockerDashComposeVersion": "v2.38.1"
+    }
+  },
+  "postCreateCommand": "npm --prefix decky ci && sudo npx --prefix decky playwright install --with-deps chromium && ./scripts/decky/build-decky-deps.sh",
+  "remoteUser": "node"
+}

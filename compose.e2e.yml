@@ -1,0 +1,36 @@
+services:
+  host-a:
+    build:
+      context: .
+      dockerfile: host/Dockerfile.portable
+    command: ["--dev", "--mock-shutdown", "--config", "/config/DeckyPowerHost.toml", "--pairing-code-value", "111111"]
+    volumes: ["./scripts/network/fixtures/host-a.toml:/config/DeckyPowerHost.toml:ro"]
+    # Keep the published test port outside commonly reserved host ranges.
+    ports: ["127.0.0.1:58991:47991"]
+
+  host-b:
+    build:
+      context: .
+      dockerfile: host/Dockerfile.portable
+    command: ["--dev", "--mock-shutdown", "--config", "/config/DeckyPowerHost.toml", "--pairing-code-value", "222222"]
+    volumes: ["./scripts/network/fixtures/host-b.toml:/config/DeckyPowerHost.toml:ro"]
+    ports: ["127.0.0.1:58100:48100"]
+
+  host-c:
+    build:
+      context: .
+      dockerfile: host/Dockerfile.portable
+    command: ["--dev", "--mock-shutdown", "--config", "/config/DeckyPowerHost.toml", "--pairing-code-value", "333333"]
+    volumes: ["./scripts/network/fixtures/host-c.toml:/config/DeckyPowerHost.toml:ro"]
+    ports: ["127.0.0.1:58201:48200"]
+
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    # The host publication below is loopback-only. Toxiproxy itself must listen
+    # on the container interface rather than its default container-localhost.
+    command: ["-host", "0.0.0.0", "-config", "/config/toxiproxy.json"]
+    volumes: ["./scripts/network/fixtures/toxiproxy.json:/config/toxiproxy.json:ro"]
+    ports:
+      - "127.0.0.1:58474:8474"
+      - "127.0.0.1:58200:48200"
+    depends_on: [host-c]

@@ -1,35 +1,63 @@
-# Manual Windows validation checklist
+# Remaining Windows and physical validation checklist
+
+## Automated dedicated-VM evidence
+
+Executed on 2026-08-30:
+
+- [x] Native Windows host, protocol client, WinUI 3 app, and installer build.
+- [x] 30 Windows Rust tests and 6 C# control-model tests.
+- [x] Install/upgrade with an Automatic, Running LocalSystem service.
+- [x] Custom port `48100` preserved through installer upgrade.
+- [x] Local named-pipe code generation and Windows DPAPI persistence paths.
+- [x] WSL production Decky backend to installed VM service over real networking.
+- [x] Wrong/correct/reused/regenerated/attempt-limited/expired pairing cases.
+- [x] Authenticated status and mock-shutdown protocol path.
+- [x] Explicit real Windows shutdown API test; Hyper-V observed the dedicated VM
+  power off.
+- [x] Service stop/start/restart, firewall, installer upgrade/uninstall, and
+  WinUI service communication in earlier dedicated-VM runs.
+
+These checks do not prove behavior on a physical gaming PC or Steam Deck.
+
+The current working tree was revalidated on the dedicated VM on 2026-08-30:
+native compilation, all 30 Rust tests, all 6 C# tests, self-contained WinUI
+publish, and Inno Setup compilation passed. A silent upgrade installed the exact
+built host binary, preserved the custom-port TOML and DPAPI credential file
+byte-for-byte, retained the Private-only firewall rule, and returned the service,
+listener, and management pipe to Running state. Production pairing and
+authenticated status succeeded before and after a service restart. The safe
+Windows pair/status/mock-shutdown E2E also passed. The opt-in real shutdown was
+not repeated during this revalidation.
+
+## Remaining physical acceptance
+
+This checklist applies only to native physical-hardware acceptance.
 
 Run this on a disposable or non-critical x86-64 Windows gaming PC. Real shutdown
 is deliberately excluded from automated tests. Record the Windows version, host
 commit, installer version, Decky Loader version, and network profile first.
 
-- [ ] Build `DeckyPowerHost.exe` and `DeckyPowerHost-Setup.exe` on native Windows.
 - [ ] Run Setup and confirm the normal UAC elevation prompt explains publisher/admin access.
 - [ ] Confirm `C:\Program Files\DeckyPowerHost\DeckyPowerHost.toml` exists beside the EXE.
 - [ ] Confirm it contains `port = 47991` on a fresh install.
-- [ ] Confirm `DeckyPowerHost` is registered as an automatic LocalSystem service.
-- [ ] Confirm the service starts and reports Running.
 - [ ] Confirm no console window appears for the service.
 - [ ] Confirm TCP `0.0.0.0:47991` is listening.
-- [ ] Confirm the `DeckyPowerHost` inbound firewall rule is TCP 47991 and Private only.
+- [ ] Confirm the inbound firewall rule follows the configured port and is Private only.
 - [ ] Confirm the rule does not allow Public-profile traffic.
-- [ ] Confirm Setup displays a six-digit temporary pairing code without exposing a long-term secret.
-- [ ] Launch `DeckyPowerHost.exe` as a standard user, approve UAC, and confirm a
-      fresh pairing code is shown without a logging panic.
-- [ ] Confirm the Start-menu **DeckyPowerHost - Pair a Steam Deck** shortcut opens
-      the same pairing helper after installation.
-- [ ] Pair from Decky on port 47991 and confirm authenticated status succeeds.
-- [ ] Confirm an incorrect pairing code fails and does not leave the host paired.
+- [ ] Launch the Start-menu **Decky Power Host** shortcut and confirm a persistent normal WinUI 3 window remains open.
+- [ ] Confirm service state and configured port are visible.
+- [ ] Confirm a six-digit pairing code and expiration countdown remain visible.
+- [ ] Confirm **Generate new code** replaces the code and invalidates the old one.
+- [ ] Confirm paired state and service connection errors are displayed in the window.
+- [ ] Confirm launching the service executable never opens a pairing terminal, console, or message box.
+- [ ] Confirm the management named pipe rejects remote and non-administrator clients, while the elevated control app can connect.
+- [ ] Pair from the physical Deck and confirm authenticated status succeeds.
 - [ ] Change TOML to `port = 48100`, rerun Setup to synchronize the firewall rule, then restart the service.
 - [ ] Update that device to port 48100 in Decky.
 - [ ] Confirm authenticated status and new pairing both work on port 48100.
 - [ ] Confirm a device configured with the old/wrong port reports an actionable unavailable error.
-- [ ] Confirm invalid HMAC, changed body/path, stale timestamp, malformed signature, and replayed nonce are rejected.
-- [ ] Confirm repeated authentication failures receive rate limiting.
 - [ ] Confirm `DeckyPowerHost.exe --dev --mock-shutdown --config <path>` uses real HTTP/Protobuf/auth but never shuts down.
-- [ ] Confirm authenticated mock shutdown logs acceptance and the mock safety message without credentials.
-- [ ] On a safe test PC, confirm real shutdown uses the Windows API and powers off.
+- [ ] On a safe physical test PC, confirm real shutdown uses the Windows API and powers off.
 - [ ] Wake it using Decky WOL and confirm the service starts automatically after boot.
 - [ ] Confirm Decky moves Offline → Starting → Online.
 - [ ] Shut down from Decky and confirm Online → Stopping → Offline.
@@ -40,3 +68,8 @@ commit, installer version, Decky Loader version, and network profile first.
 - [ ] Uninstall and confirm service and firewall rule removal.
 - [ ] Confirm TOML and DPAPI credentials remain, as documented, for reinstall continuity.
 - [ ] Delete retained `C:\Program Files\DeckyPowerHost\DeckyPowerHost.toml` and `%ProgramData%\DeckyPowerHost` manually when permanent credential removal is desired.
+
+Before manual checks, run `scripts\windows\validate-windows.ps1` without destructive
+flags. Use `scripts\windows\collect-diagnostics.ps1` to produce a sanitized archive for
+review. Neither script includes pairing codes or credentials, and neither runs
+a real shutdown by default.

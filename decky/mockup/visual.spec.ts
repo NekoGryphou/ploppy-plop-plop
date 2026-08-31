@@ -15,8 +15,11 @@ test("captures Quick Access and Add PC states", async ({ page }) => {
   expect(inputBox).not.toBeNull();
   expect(labelBox).not.toBeNull();
   expect(panelBox).not.toBeNull();
-  expect(inputBox!.width).toBeGreaterThan(240);
-  expect(Math.abs(inputBox!.y - labelBox!.y)).toBeLessThan(20);
-  expect(inputBox!.x + inputBox!.width).toBeLessThanOrEqual(panelBox!.x + panelBox!.width);
+  if (!inputBox || !labelBox || !panelBox) {
+    throw new Error("The Add PC form must have measurable input, label, and panel bounds.");
+  }
+  expect(inputBox.width).toBeGreaterThan(240);
+  expect(Math.abs(inputBox.y - labelBox.y)).toBeLessThan(20);
+  expect(inputBox.x + inputBox.width).toBeLessThanOrEqual(panelBox.x + panelBox.width);
   await page.screenshot({ path: "../out/tests/decky-ui.png", fullPage: true });
 });

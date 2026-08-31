@@ -2,7 +2,12 @@ import { DialogButton, Navigation } from "@decky/ui";
 import { FaCog } from "react-icons/fa";
 import type { JSX } from "react";
 
-/** @public @desc Quick Access title with an accessible native settings action. @returns Plugin title. */
+/**
+* @public
+* @desc Quick Access title with an accessible native settings action.
+*
+* @returns Plugin title.
+*/
 export function TitleView(): JSX.Element {
   const openSettings = (): void => {
     Navigation.CloseSideMenus();

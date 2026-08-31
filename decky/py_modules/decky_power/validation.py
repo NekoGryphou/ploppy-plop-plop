@@ -34,9 +34,24 @@ def validate_port(value: object, *, default: bool = False) -> int:
 
 def validate_address(value: object) -> str:
     address = str(value or "").strip()
-    if not address or "/" in address or "://" in address or any(character.isspace() for character in address):
+    if not address or len(address) > 253 or any(character.isspace() for character in address):
         raise ValidationError("Enter a hostname or IP address.")
-    return address
+    try:
+        parsed = ipaddress.ip_address(address)
+    except ValueError:
+        labels = address.removesuffix(".").split(".")
+        if any(
+            not 1 <= len(label) <= 63
+            or not label[0].isalnum()
+            or not label[-1].isalnum()
+            or any(not (character.isascii() and (character.isalnum() or character == "-")) for character in label)
+            for label in labels
+        ):
+            raise ValidationError("Enter a hostname or IPv4 address.")
+        return address.removesuffix(".")
+    if not isinstance(parsed, ipaddress.IPv4Address):
+        raise ValidationError("Enter a hostname or IPv4 address.")
+    return str(parsed)
 
 
 def validate_broadcast(value: object) -> str | None:

@@ -1,0 +1,36 @@
+<Window
+    x:Class="DeckyPowerHostControl.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Decky Power Host">
+    <ScrollViewer>
+        <Grid Padding="32" MaxWidth="640" HorizontalAlignment="Center">
+            <StackPanel Spacing="18">
+                <TextBlock Text="Decky Power Host" FontSize="28" FontWeight="SemiBold" />
+                <TextBlock Text="Service" FontSize="20" FontWeight="SemiBold" />
+                <TextBlock x:Name="ServiceStatusText" AutomationProperties.AutomationId="ServiceStatus" Text="Checking…" />
+                <TextBlock Text="Host port" FontSize="20" FontWeight="SemiBold" />
+                <TextBlock x:Name="HostPortText" AutomationProperties.AutomationId="HostPort" Text="—" />
+                <TextBlock Text="Host version" FontSize="20" FontWeight="SemiBold" />
+                <TextBlock x:Name="HostVersionText" AutomationProperties.AutomationId="HostVersion" Text="—" />
+                <TextBlock x:Name="UpdateStatusText" AutomationProperties.AutomationId="UpdateStatus"
+                           Text="Plugin version not detected yet" TextWrapping="Wrap" />
+                <Button x:Name="UpdateHostButton" AutomationProperties.AutomationId="UpdateHost"
+                        Content="Check for host updates" HorizontalAlignment="Center" Click="UpdateHost_Click" />
+                <TextBlock Text="Pair this PC" FontSize="20" FontWeight="SemiBold" />
+                <TextBlock x:Name="PairingStatusText" AutomationProperties.AutomationId="PairingStatus" Text="Not paired" />
+                <TextBlock x:Name="PairingCodeText" AutomationProperties.AutomationId="PairingCode"
+                           Text="—" FontFamily="Consolas" FontSize="42" FontWeight="SemiBold"
+                           HorizontalAlignment="Center" />
+                <TextBlock x:Name="PairingExpirationText" AutomationProperties.AutomationId="PairingExpiration"
+                           Text="—" HorizontalAlignment="Center" />
+                <Button x:Name="GeneratePairingCodeButton" AutomationProperties.AutomationId="GeneratePairingCode"
+                        Content="Generate new code" HorizontalAlignment="Center" Click="GeneratePairingCode_Click" />
+                <Border x:Name="ErrorBorder" AutomationProperties.AutomationId="ServiceError"
+                        Visibility="Collapsed" Padding="12" CornerRadius="4" Background="#40C42B1C">
+                    <TextBlock x:Name="ErrorText" TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Window>

@@ -14,11 +14,11 @@ function Showcase() {
                 <div className="mock-title"><TitleView/></div>
             </header>
             <div className="content">
-                <DeviceRow device={mockDevices[0]} status={{state: "online", message: "Online"}}
+                <DeviceRow device={mockDevices[0]} status={{state: "online", pairing: "paired", message: "Online"}}
                            onAction={() => undefined}/>
-                <DeviceRow device={mockDevices[1]} status={{state: "offline", message: "Offline"}}
+                <DeviceRow device={mockDevices[1]} status={{state: "offline", pairing: "unpaired", message: "Offline"}}
                            onAction={() => undefined}/>
-                <DeviceRow device={mockDevices[2]} status={{state: "starting", message: "Starting"}}
+                <DeviceRow device={mockDevices[2]} status={{state: "starting", pairing: "paired", message: "Starting"}}
                            onAction={() => undefined}/>
             </div>
         </div>

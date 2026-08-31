@@ -4,9 +4,13 @@ decky/dist/
 decky/coverage/
 .pnpm-store/
 .idea/
+.local/
 out/
 decky/src/dev/
 host/target/
+tools/decky-power-test/target/
+host/control/**/bin/
+host/control/**/obj/
 host/DeckyPowerHost.dev-state.json
 decky/py_modules/cryptography/
 decky/py_modules/spake2/

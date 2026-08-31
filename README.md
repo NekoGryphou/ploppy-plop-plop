@@ -16,7 +16,7 @@ telemetry, or generic remote-command endpoints.
 
 ```text
 decky/          Decky plugin frontend, backend, tests, and UI preview
-host/           Rust DeckyPowerHost service and Windows installer
+host/           Rust service, WinUI control app, and Windows installer
 proto/          Shared Protocol Buffers contract
 docs/           Architecture and Windows validation documentation
 scripts/        Repository build entry points
@@ -51,24 +51,27 @@ SSH keys required. No Windows password is stored on the Steam Deck.
 2. Run it and accept elevation. Elevation is needed only to copy into Program
    Files, register the automatic Windows service, protect its data directory, and
    create a Private-profile firewall rule.
-3. Setup displays a temporary six-digit pairing code. Leave that dialog visible.
+3. Setup starts the headless service and offers to open `DeckyPowerHostControl`.
+4. Approve the control application's elevation prompt and keep its normal window
+   open while pairing. It displays the service state, configured port, pairing
+   state, six-digit code, expiration, regeneration action, and connection errors.
 
-The service has no persistent desktop UI after setup and starts automatically
-with Windows. Launching `DeckyPowerHost.exe` normally opens an elevated pairing
-helper and shows a fresh five-minute code whenever the host is not yet paired.
-The Start-menu shortcut **DeckyPowerHost - Pair a Steam Deck** does the same, so
-the installer dialog is not the only place the code is available.
+`DeckyPowerHost.exe` never presents interactive UI. Pairing is owned by the
+service and exposed to the elevated WinUI 3 control application through a
+narrow, local-only named pipe restricted to LocalSystem and Administrators. The
+LAN API accepts pairing exchanges but cannot reveal the current code.
 
 ### Decky plugin
 
 1. Install the plugin ZIP using Decky Loader's developer/plugin installation
    workflow.
 2. Open **Remote PC Power → Settings → Add PC**.
-3. Enter a name, hostname/IP, host port, optional broadcast address, and the
-   six-digit code shown by Setup. The plugin detects the MAC from the address;
-   enable **Enter MAC address manually** if discovery is unavailable or you need
-   to override it.
-4. Choose **Save and pair**.
+3. Enter a name, hostname/IP, host port, MAC address, and optional broadcast
+   address, then choose **Save**. The PC may be powered off and no pairing code
+   or network connection is required.
+4. The saved PC appears as **Not paired** and can already be started with WOL.
+5. When the PC is awake, choose **Pair**, open `DeckyPowerHostControl` on
+   Windows, generate a code, and enter that code in the separate pairing form.
 
 Repeat for each PC. Every PC keeps an independent address, port, MAC, host
 identity, and credential.
@@ -102,10 +105,34 @@ Reinstallation/upgrades use Inno Setup's `onlyifdoesntexist` rule and never
 replace existing TOML. You do not need to reinstall merely to change the port;
 rerunning Setup is the supported firewall synchronization mechanism.
 
+`DeckyPowerHostControl` shows the running host version and provides a guided
+update. It accepts installers only from this repository's HTTPS release path,
+enforces the release-manifest SHA-256, validates the Windows Authenticode trust
+chain, and pins the release signing-certificate thumbprint embedded at build
+time before requesting elevation. Running the verified Setup upgrades the
+service in place.
+The machine DPAPI identity in `%ProgramData%\DeckyPowerHost` is outside the
+installation directory, so host upgrades preserve the host UUID and pairing
+credential. Decky Loader manages plugin package updates; the plugin reopens the
+same versioned settings and credential files after replacement. Compatible host
+and plugin updates therefore do not require pairing again.
+
+Both components advertise their `X.Y.Z` release version. A major-version
+difference is treated as incompatible, a minor-version difference shows which
+component to update, and patch-only differences remain silent. The plugin shows
+the guidance beside the affected PC; the Windows control application shows the
+last authenticated plugin version it observed. Version reporting is additive
+metadata and never rotates or deletes the pairing credential.
+The last authenticated plugin version is stored with the DPAPI-protected host
+identity, retaining update guidance across service restarts without trusting
+unauthenticated LAN metadata.
+
 ## Pairing and security
 
-Pairing uses a CSPRNG-generated six-digit code, a five-minute lifetime, five
-attempts, SPAKE2, explicit key confirmation, HKDF-SHA256, and ChaCha20-Poly1305.
+Pairing uses a CSPRNG-generated six-digit code, a five-minute lifetime, SPAKE2,
+explicit key confirmation, HKDF-SHA256, and ChaCha20-Poly1305. Failed key
+confirmations are limited to five per source and code. Unconfirmed exchanges are bounded
+globally and per source address so one LAN client cannot consume every slot.
 The code is never sent over the network, and a passive capture does not give an
 offline test for guessed codes. A correct exchange creates a random 256-bit
 credential that the user never sees.
@@ -113,7 +140,9 @@ credential that the user never sees.
 Every status and shutdown request is authenticated with HMAC-SHA256 over a
 canonical length-prefixed timestamp, nonce, HTTP method, path, and body hash. The
 host rejects stale clocks, changed bodies/paths, malformed tags, reused nonces,
-and repeated failures. HMAC comparisons and pairing confirmation use established
+and repeated failures. Accepted shutdown nonces survive service restarts for the
+replay window. Pairing credential encryption also authenticates the returned host
+identity metadata. HMAC comparisons and pairing confirmation use established
 constant-time implementations. The paired stable host UUID prevents an address
 being silently reassigned to another PC.
 
@@ -156,12 +185,11 @@ packets on UDP ports 9 and 7; DeckyPowerHost is not involved in startup.
   Private firewall rule.
 - **Port already in use:** choose another valid TOML port, rerun Setup, restart
   the service, and update Decky.
-- **Pairing fails:** launch `DeckyPowerHost.exe` or the Start-menu pairing
-  shortcut to generate a fresh five-minute code. Windows requests elevation
-  because pairing state is protected from ordinary processes. If the Deck lost
-  an existing credential, use
-  `DeckyPowerHost.exe --reset-pairing`, restart the service, and retry promptly.
-  Resetting invalidates the previous Deck credential.
+- **Pairing fails:** open `DeckyPowerHostControl`, verify the service is Running,
+  and generate a fresh five-minute code. The device configuration remains saved
+  after wrong or expired codes. Generating a new code invalidates the previous
+  code; successful re-pairing replaces the previous Deck credential. A lost
+  final response is retried once with the same pairing exchange.
 - **Authentication fails:** use **Pair again**; an address may point to another
   host or protected state may have been reset.
 - **PC appears offline:** authenticated host status is authoritative; firewalls,
@@ -197,7 +225,7 @@ is required. The protocol source remains [decky_power.proto](proto/decky_power.p
 git clone <repository-url>
 cd decky-my-rig
 cd decky
-npm install
+npm ci
 npm run backend:deps
 npm run build
 npm test
@@ -213,9 +241,9 @@ the repository root as documented by the
 [official template](https://github.com/SteamDeckHomebrew/decky-plugin-template)
 and [development guide](https://wiki.deckbrew.xyz/en/loader-dev/development).
 
-GitHub Actions uploads the assembled `RemotePCPower/` directory rather than
-uploading this ZIP as a file. GitHub's artifact download is therefore directly
-usable and does not contain another ZIP inside it.
+GitHub Actions uploads `out/plugin/RemotePCPower.zip` as the portable plugin
+artifact. Extract that archive before using Decky Loader's plugin installation
+workflow.
 
 ### Review the UI without a Steam Deck
 
@@ -243,6 +271,28 @@ Development mode uses real HTTP, Protobuf, SPAKE2, HMAC, and persistence, but it
 power controller only records the request. It refuses `--dev` without
 `--mock-shutdown`.
 
+### Primary local portable pipeline
+
+From WSL/Linux, the checked-in commands shared with CI are:
+
+```bash
+./scripts/build.sh
+./scripts/test.sh
+./scripts/test-e2e.sh
+./scripts/check.sh
+```
+
+`check.sh` is the primary gate. It runs static checks, frontend/backend tests,
+Rust formatting and Clippy, production builds, real-socket pairing/status/mock
+shutdown, the complete persisted lifecycle test, real UDP WOL capture, and
+plugin packaging. The optional `.devcontainer` defines Node 22, pnpm 9.15.9,
+Rust 1.98.0, Protobuf tooling, Docker Engine, and Docker Compose. When Docker is
+available, `scripts/network/test-toxiproxy.sh` runs the production portable hosts through
+Toxiproxy. Without Docker, set `TOXIPROXY_SERVER` to an official executable
+Toxiproxy 2.12.0 server binary to run the same faults against an isolated local
+production-host process. If neither topology is available, the result is
+reported as `NOT EXECUTED`, not as a pass.
+
 ### Build Windows host and installer (native Windows)
 
 Open **x64 Native Tools Command Prompt for VS 2022**, then:
@@ -258,6 +308,7 @@ Artifacts:
 
 ```text
 out\host\DeckyPowerHost.exe
+out\control\DeckyPowerHostControl.exe
 out\host\DeckyPowerHost-Setup.exe
 ```
 
@@ -277,7 +328,9 @@ and [`JRSoftware.InnoSetup`](https://jrsoftware.org/isdl.php). It installs the
 stable Rust MSVC target, rustfmt, and Clippy. It does not install or start
 DeckyPowerHost, create a service, alter the firewall, or execute the installer.
 
-Then build and test everything locally:
+Windows interoperability is optional and not part of the portable gate. To run
+the native Windows build from WSL when Windows build tools are deliberately
+available:
 
 ```bash
 ./scripts/build-local.sh
@@ -315,10 +368,16 @@ reinstallation. For permanent removal, delete the retained TOML and
 
 ## Validation
 
-The Windows CI job runs formatting, Clippy, tests, an MSVC release build, Inno
-Setup compilation, and uploads both executables. Automated tests never invoke
-real shutdown. Complete [the manual Windows checklist](docs/WINDOWS_VALIDATION.md)
-before publishing a release.
+Independent reviewers should begin with [the reviewer guide](docs/REVIEW_GUIDE.md),
+which maps trust boundaries, security-critical files, reproducible gates, and
+the remaining physical-hardware evidence boundary.
+
+The Windows CI job runs safe tests, an MSVC release build, WinUI model tests,
+WinUI 3 publish, Inno Setup compilation, and uploads the artifacts. This is
+distinct from real-host validation. Run `scripts/windows/validate-windows.ps1` and
+`scripts/windows/collect-diagnostics.ps1` on the gaming PC, then complete the
+[manual Windows checklist](docs/WINDOWS_VALIDATION.md) and
+[real-LAN acceptance procedure](docs/REAL_LAN_VALIDATION.md) before publishing.
 
 ## References
 

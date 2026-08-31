@@ -1,9 +1,10 @@
-#[cfg(windows)]
-use rand::Rng;
-use std::{path::PathBuf, sync::Arc};
+#![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
+
+use std::path::PathBuf;
 
 #[cfg(windows)]
-use std::{fs::OpenOptions, io};
+use std::fs::OpenOptions;
+use std::sync::Arc;
 
 use decky_power_host::{
     HOST_VERSION, PROTOCOL_VERSION,
@@ -20,54 +21,48 @@ use tokio::sync::Mutex;
 async fn main() -> anyhow::Result<()> {
     let arguments: Vec<String> = std::env::args().collect();
     let _log_guard = init_logging(&arguments)?;
-    #[cfg(windows)]
-    if is_interactive_pairing(&arguments) {
-        return show_pairing_code(&arguments);
-    }
-    #[cfg(windows)]
-    if arguments.iter().any(|arg| arg == "--reset-pairing") {
-        let store = decky_power_host::storage::windows::WindowsCredentialStore::program_data()?;
-        let mut identity = store.load_or_create()?;
-        identity.credential = None;
-        identity.pairing_code = Some(format!("{:06}", rand::rng().random_range(0..1_000_000)));
-        identity.pairing_created_at = decky_power_host::auth::now_unix();
-        store.save(&identity)?;
-        println!(
-            "DeckyPowerHost pairing was reset. New pairing code: {}",
-            identity.pairing_code.as_deref().unwrap_or("unavailable")
-        );
-        return Ok(());
-    }
     if arguments.iter().any(|arg| arg == "--service") {
         #[cfg(windows)]
         return decky_power_host::service::windows::dispatch();
         #[cfg(not(windows))]
         anyhow::bail!("service mode is only supported on Windows");
     }
+    run_portable(arguments).await
+}
+
+async fn run_portable(arguments: Vec<String>) -> anyhow::Result<()> {
     if !arguments.iter().any(|arg| arg == "--dev") {
-        anyhow::bail!(
-            "unknown arguments; use --dev --mock-shutdown for development or --pairing-code"
-        );
+        anyhow::bail!("unknown arguments; use --dev --mock-shutdown for development");
     }
     if !arguments.iter().any(|arg| arg == "--mock-shutdown") {
         anyhow::bail!("development mode requires --mock-shutdown");
     }
     let config_path = config_override(&arguments).unwrap_or(HostConfig::next_to_executable()?);
     let config = HostConfig::load(&config_path)?;
+    let listen_port = if arguments.iter().any(|arg| arg == "--ephemeral-port") {
+        0
+    } else {
+        config.port
+    };
     let state_path = config_path.with_file_name("DeckyPowerHost.dev-state.json");
     let store: Arc<dyn CredentialStore> = Arc::new(DevelopmentStore { path: state_path });
-    let identity = store.load_or_create()?;
+    let mut identity = store.load_or_create()?;
     let requested_code = arguments
         .windows(2)
         .find(|pair| pair[0] == "--pairing-code-value")
         .map(|pair| pair[1].clone());
     let pairing = if let Some(code) = requested_code {
-        PairingCode::from_code(code)?
+        let pairing = PairingCode::from_code(code)?;
+        identity.pairing_code = Some(pairing.display_code().to_owned());
+        identity.pairing_created_at = decky_power_host::auth::now_unix();
+        store.save(&identity)?;
+        pairing
     } else if let Some(code) = identity.pairing_code.clone() {
         PairingCode::from_code_with_age(
             code,
-            std::time::Duration::from_secs(
-                decky_power_host::auth::now_unix().saturating_sub(identity.pairing_created_at),
+            decky_power_host::management::persisted_code_age(
+                identity.pairing_created_at,
+                decky_power_host::auth::now_unix(),
             ),
         )?
     } else {
@@ -75,10 +70,12 @@ async fn main() -> anyhow::Result<()> {
     };
     println!("DeckyPowerHost pairing code: {}", pairing.display_code());
     tracing::info!(version = HOST_VERSION, protocol_version = PROTOCOL_VERSION, config = %config_path.display(), port = config.port, "DeckyPowerHost starting in safe development mode");
-    let listener = server::bind(config.port)
+    let listener = server::bind(listen_port)
         .await
-        .map_err(|error| anyhow::anyhow!("could not listen on 0.0.0.0:{}: {error}", config.port))?;
+        .map_err(|error| anyhow::anyhow!("could not listen on 0.0.0.0:{listen_port}: {error}"))?;
+    println!("DECKY_POWER_LISTEN_PORT={}", listener.local_addr()?.port());
     let hostname = hostname::get()?.to_string_lossy().into_owned();
+    let latest_client_version = identity.last_client_version.clone();
     server::serve(
         listener,
         Arc::new(AppState {
@@ -88,6 +85,7 @@ async fn main() -> anyhow::Result<()> {
             power: Arc::new(MockPowerController::default()),
             store,
             hostname,
+            latest_client_version: Mutex::new(latest_client_version),
         }),
     )
     .await?;
@@ -106,6 +104,7 @@ fn init_logging(
             .ok_or_else(|| anyhow::anyhow!("ProgramData is unavailable"))?
             .join("DeckyPowerHost");
         let log_path = directory.join("DeckyPowerHost.log");
+        rotate_log_if_needed(&log_path, 5 * 1024 * 1024)?;
         match std::fs::create_dir_all(&directory)
             .and_then(|_| OpenOptions::new().create(true).append(true).open(&log_path))
         {
@@ -131,102 +130,19 @@ fn init_logging(
     Ok(None)
 }
 
-#[cfg(windows)]
-fn is_interactive_pairing(arguments: &[String]) -> bool {
-    arguments.len() == 1 || arguments.iter().any(|arg| arg == "--pairing-code")
-}
-
-#[cfg(windows)]
-fn show_pairing_code(arguments: &[String]) -> anyhow::Result<()> {
-    use decky_power_host::storage::windows::WindowsCredentialStore;
-
-    let store = WindowsCredentialStore::program_data()?;
-    let mut identity = match store.load_or_create() {
-        Ok(identity) => identity,
-        Err(error) if error.kind() == io::ErrorKind::PermissionDenied => {
-            if arguments.iter().any(|arg| arg == "--elevated-pairing") {
-                anyhow::bail!(
-                    "access to protected pairing state was denied even after elevation: {error}"
-                );
-            }
-            elevate_pairing_helper()?;
-            return Ok(());
-        }
-        Err(error) => return Err(error.into()),
+#[cfg(any(windows, test))]
+fn rotate_log_if_needed(path: &std::path::Path, maximum_bytes: u64) -> std::io::Result<()> {
+    let Ok(metadata) = std::fs::metadata(path) else {
+        return Ok(());
     };
-    let message = if identity.credential.is_some() {
-        "DeckyPowerHost is already paired. To replace the paired Steam Deck, run DeckyPowerHost.exe --reset-pairing from an Administrator terminal.".to_owned()
-    } else {
-        identity.pairing_code = Some(format!("{:06}", rand::rng().random_range(0..1_000_000)));
-        identity.pairing_created_at = decky_power_host::auth::now_unix();
-        store.save(&identity)?;
-        format!(
-            "DeckyPowerHost pairing code: {}\n\nThis code expires after five minutes.",
-            identity.pairing_code.as_deref().unwrap_or("unavailable")
-        )
-    };
-    println!("{message}");
-    if arguments.iter().any(|arg| arg == "--show-dialog") {
-        show_message(&message);
+    if metadata.len() < maximum_bytes {
+        return Ok(());
     }
-    Ok(())
-}
-
-#[cfg(windows)]
-fn elevate_pairing_helper() -> anyhow::Result<()> {
-    use windows::{
-        Win32::UI::{Shell::ShellExecuteW, WindowsAndMessaging::SW_SHOWNORMAL},
-        core::PCWSTR,
-    };
-
-    let executable = std::env::current_exe()?;
-    let executable_wide = wide(executable.as_os_str());
-    let operation = wide(std::ffi::OsStr::new("runas"));
-    let parameters = wide(std::ffi::OsStr::new(
-        "--pairing-code --elevated-pairing --show-dialog",
-    ));
-    let result = unsafe {
-        ShellExecuteW(
-            None,
-            PCWSTR(operation.as_ptr()),
-            PCWSTR(executable_wide.as_ptr()),
-            PCWSTR(parameters.as_ptr()),
-            PCWSTR::null(),
-            SW_SHOWNORMAL,
-        )
-    };
-    if result.0 as isize <= 32 {
-        anyhow::bail!(
-            "administrator permission is required to access protected pairing state (ShellExecute error {})",
-            result.0 as isize
-        );
+    let archived = path.with_extension("log.1");
+    if archived.exists() {
+        std::fs::remove_file(&archived)?;
     }
-    Ok(())
-}
-
-#[cfg(windows)]
-fn show_message(message: &str) {
-    use windows::{
-        Win32::UI::WindowsAndMessaging::{MB_ICONINFORMATION, MB_OK, MessageBoxW},
-        core::PCWSTR,
-    };
-
-    let title = wide(std::ffi::OsStr::new("DeckyPowerHost"));
-    let message = wide(std::ffi::OsStr::new(message));
-    unsafe {
-        MessageBoxW(
-            None,
-            PCWSTR(message.as_ptr()),
-            PCWSTR(title.as_ptr()),
-            MB_OK | MB_ICONINFORMATION,
-        );
-    }
-}
-
-#[cfg(windows)]
-fn wide(value: &std::ffi::OsStr) -> Vec<u16> {
-    use std::os::windows::ffi::OsStrExt;
-    value.encode_wide().chain(std::iter::once(0)).collect()
+    std::fs::rename(path, archived)
 }
 
 fn config_override(arguments: &[String]) -> Option<PathBuf> {
@@ -234,4 +150,25 @@ fn config_override(arguments: &[String]) -> Option<PathBuf> {
         .windows(2)
         .find(|pair| pair[0] == "--config")
         .map(|pair| PathBuf::from(&pair[1]))
+}
+
+#[cfg(test)]
+mod logging_tests {
+    use super::rotate_log_if_needed;
+
+    #[test]
+    fn service_log_rotation_is_bounded_to_one_archive() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("DeckyPowerHost.log");
+        std::fs::write(&path, b"old log").unwrap();
+        std::fs::write(path.with_extension("log.1"), b"older log").unwrap();
+
+        rotate_log_if_needed(&path, 4).unwrap();
+
+        assert!(!path.exists());
+        assert_eq!(
+            std::fs::read(path.with_extension("log.1")).unwrap(),
+            b"old log"
+        );
+    }
 }

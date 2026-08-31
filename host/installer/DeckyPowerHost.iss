@@ -19,18 +19,14 @@ SetupLogging=yes
 
 [Files]
 Source: "..\target\x86_64-pc-windows-msvc\release\decky-power-host.exe"; DestDir: "{app}"; DestName: "DeckyPowerHost.exe"; Flags: ignoreversion
+Source: "..\..\out\control\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "DeckyPowerHost.toml"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall
 
 [Run]
-Filename: "{sys}\sc.exe"; Parameters: "create DeckyPowerHost binPath= ""\""{app}\DeckyPowerHost.exe\"" --service"" start= auto DisplayName= ""DeckyPowerHost"""; Flags: runhidden waituntilterminated; Check: not ServiceExists
-Filename: "{sys}\sc.exe"; Parameters: "config DeckyPowerHost binPath= ""\""{app}\DeckyPowerHost.exe\"" --service"" start= auto"; Flags: runhidden waituntilterminated; Check: ServiceExists
-Filename: "{sys}\sc.exe"; Parameters: "failure DeckyPowerHost reset= 86400 actions= restart/5000/restart/15000"; Flags: runhidden waituntilterminated
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""DeckyPowerHost"""; Flags: runhidden waituntilterminated
-Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""DeckyPowerHost"" dir=in action=allow protocol=TCP localport={code:GetConfiguredPort} profile=private program=""{app}\DeckyPowerHost.exe"" enable=yes"; Flags: runhidden waituntilterminated
-Filename: "{sys}\sc.exe"; Parameters: "start DeckyPowerHost"; Flags: runhidden waituntilterminated
+Filename: "{app}\DeckyPowerHostControl.exe"; Description: "Open Decky Power Host"; Flags: postinstall nowait skipifsilent runasoriginaluser
 
 [Icons]
-Name: "{group}\DeckyPowerHost - Pair a Steam Deck"; Filename: "{app}\DeckyPowerHost.exe"; WorkingDir: "{app}"
+Name: "{group}\Decky Power Host"; Filename: "{app}\DeckyPowerHostControl.exe"; WorkingDir: "{app}"
 
 [UninstallRun]
 Filename: "{sys}\sc.exe"; Parameters: "stop DeckyPowerHost"; Flags: runhidden waituntilterminated; RunOnceId: "StopService"
@@ -44,6 +40,13 @@ function ServiceExists: Boolean;
 var ResultCode: Integer;
 begin
   Result := Exec(ExpandConstant('{sys}\sc.exe'), 'query DeckyPowerHost', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+end;
+
+procedure ExecRequired(const Filename, Parameters, Description: String);
+var ResultCode: Integer;
+begin
+  if not Exec(Filename, Parameters, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) or (ResultCode <> 0) then
+    RaiseException(Description + ' failed (exit code ' + IntToStr(ResultCode) + '). Setup stopped without reporting a successful installation.');
 end;
 
 function ReadPortFromConfig: String;
@@ -68,23 +71,30 @@ begin
   Result := ConfiguredPort;
 end;
 
-function JoinLines(Lines: TArrayOfString): String;
-var Index: Integer;
-begin
-  Result := '';
-  for Index := 0 to GetArrayLength(Lines) - 1 do begin
-    if Result <> '' then Result := Result + #13#10;
-    Result := Result + Lines[Index];
-  end;
-end;
-
 procedure CurStepChanged(CurStep: TSetupStep);
-var ResultCode: Integer; Output: TExecOutput;
+var ResultCode: Integer;
 begin
+  if (CurStep = ssInstall) and ServiceExists then begin
+    { Stop before replacing the executable; sc.exe returns success while the
+      service transitions, so wait for the process image to be released. }
+    if not Exec(ExpandConstant('{sys}\sc.exe'), 'stop DeckyPowerHost', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) or
+       ((ResultCode <> 0) and (ResultCode <> 1062)) then
+      RaiseException('Stopping the existing DeckyPowerHost service failed (exit code ' + IntToStr(ResultCode) + ').');
+    Sleep(1500);
+  end;
   if CurStep = ssPostInstall then begin
-    ForceDirectories(ExpandConstant('{commonappdata}\DeckyPowerHost'));
-    Exec(ExpandConstant('{sys}\icacls.exe'), '"' + ExpandConstant('{commonappdata}\DeckyPowerHost') + '" /inheritance:r /grant:r SYSTEM:(OI)(CI)F Administrators:(OI)(CI)F', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-    if ExecAndCaptureOutput(ExpandConstant('{app}\DeckyPowerHost.exe'), '--pairing-code', '', SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode, Output) and (ResultCode = 0) then
-      MsgBox(JoinLines(Output.StdOut) + #13#10 + 'Enter this code when adding the PC in Decky. It expires after five minutes.', mbInformation, MB_OK);
+    if not ForceDirectories(ExpandConstant('{commonappdata}\DeckyPowerHost')) then
+      RaiseException('DeckyPowerHost could not create its protected credential directory.');
+    if not Exec(ExpandConstant('{sys}\icacls.exe'), '"' + ExpandConstant('{commonappdata}\DeckyPowerHost') + '" /inheritance:r /grant:r *S-1-5-18:(OI)(CI)F *S-1-5-32-544:(OI)(CI)F', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) or (ResultCode <> 0) then
+      RaiseException('DeckyPowerHost could not secure its credential directory.');
+    if ServiceExists then
+      ExecRequired(ExpandConstant('{sys}\sc.exe'), 'config DeckyPowerHost binPath= ""' + ExpandConstant('{app}\DeckyPowerHost.exe') + '" --service" start= auto', 'Configuring the DeckyPowerHost service')
+    else
+      ExecRequired(ExpandConstant('{sys}\sc.exe'), 'create DeckyPowerHost binPath= ""' + ExpandConstant('{app}\DeckyPowerHost.exe') + '" --service" start= auto DisplayName= "DeckyPowerHost"', 'Creating the DeckyPowerHost service');
+    ExecRequired(ExpandConstant('{sys}\sc.exe'), 'failure DeckyPowerHost reset= 86400 actions= restart/5000/restart/15000', 'Configuring service recovery');
+    { Deleting an absent rule may return a nonzero result, so only creation is fatal. }
+    Exec(ExpandConstant('{sys}\netsh.exe'), 'advfirewall firewall delete rule name="DeckyPowerHost"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    ExecRequired(ExpandConstant('{sys}\netsh.exe'), 'advfirewall firewall add rule name="DeckyPowerHost" dir=in action=allow protocol=TCP localport=' + GetConfiguredPort('') + ' profile=private program="' + ExpandConstant('{app}\DeckyPowerHost.exe') + '" enable=yes', 'Creating the private-network firewall rule');
+    ExecRequired(ExpandConstant('{sys}\sc.exe'), 'start DeckyPowerHost', 'Starting the DeckyPowerHost service');
   end;
 end;

@@ -1,0 +1,9 @@
+FROM rust:1.98.0-bookworm AS build
+WORKDIR /source
+COPY proto /source/proto
+COPY host /source/host
+RUN cargo build --manifest-path /source/host/Cargo.toml --release
+
+FROM debian:bookworm-slim
+COPY --from=build /source/host/target/release/decky-power-host /usr/local/bin/decky-power-host
+ENTRYPOINT ["decky-power-host"]

@@ -1,0 +1,14 @@
+.git
+.github
+.local
+.devcontainer
+decky
+docs
+out
+scripts
+tools
+
+# Native and managed build outputs under the host source tree.
+host/target
+host/control/**/bin
+host/control/**/obj

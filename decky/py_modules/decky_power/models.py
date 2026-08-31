@@ -15,9 +15,14 @@ class DeviceState(StrEnum):
     ONLINE = "online"
     STOPPING = "stopping"
     UNKNOWN = "unknown"
-    AUTHENTICATION_FAILED = "authentication_failed"
-    HOST_UNAVAILABLE = "host_unavailable"
-    UPDATE_REQUIRED = "update_required"
+
+
+class PairingState(StrEnum):
+    UNPAIRED = "unpaired"
+    PAIRING = "pairing"
+    PAIRED = "paired"
+    PAIRING_FAILED = "pairing_failed"
+    PAIRING_EXPIRED = "pairing_expired"
 
 
 @dataclass(slots=True)
