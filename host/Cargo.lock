@@ -226,7 +226,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "decky-power-host"
+name = "decky-my-rig-host"
 version = "0.1.0"
 dependencies = [
  "anyhow",

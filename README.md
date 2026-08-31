@@ -1,4 +1,4 @@
-# Decky Remote PC Power
+# Decky My Rig
 
 Start and shut down one or more Windows gaming PCs from Decky Loader's Quick
 Access panel. Daily use stays intentionally small: choose a PC and press **Start**
@@ -6,7 +6,7 @@ or **Stop**.
 
 ```text
 Start → Wake-on-LAN
-Stop  → authenticated DeckyPowerHost request → Windows shutdown API
+Stop  → authenticated DeckyMyRigHost request → Windows shutdown API
 ```
 
 Everything stays on the local network. There are no accounts, cloud services,
@@ -38,7 +38,7 @@ Windows PC:
 
 - x86-64 Windows 10 or Windows 11;
 - a Wake-on-LAN-capable network adapter and LAN;
-- the produced `DeckyPowerHost-Setup.exe`.
+- the produced `DeckyMyRig_Host__Windows_x64.exe`.
 
 No Python required. No Node.js required. No Java required. No SSH required. No
 SSH keys required. No Windows password is stored on the Steam Deck.
@@ -47,16 +47,16 @@ SSH keys required. No Windows password is stored on the Steam Deck.
 
 ### Windows host
 
-1. Download `DeckyPowerHost-Setup.exe` from the project release or CI artifact.
+1. Download `DeckyMyRig_Host__Windows_x64.exe` from the project release or CI artifact.
 2. Run it and accept elevation. Elevation is needed only to copy into Program
    Files, register the automatic Windows service, protect its data directory, and
    create a Private-profile firewall rule.
-3. Setup starts the headless service and offers to open `DeckyPowerHostControl`.
+3. Setup starts the headless service and offers to open `DeckyMyRigHostControl`.
 4. Approve the control application's elevation prompt and keep its normal window
    open while pairing. It displays the service state, configured port, pairing
    state, six-digit code, expiration, regeneration action, and connection errors.
 
-`DeckyPowerHost.exe` never presents interactive UI. Pairing is owned by the
+`DeckyMyRigHost.exe` never presents interactive UI. Pairing is owned by the
 service and exposed to the elevated WinUI 3 control application through a
 narrow, local-only named pipe restricted to LocalSystem and Administrators. The
 LAN API accepts pairing exchanges but cannot reveal the current code.
@@ -65,12 +65,12 @@ LAN API accepts pairing exchanges but cannot reveal the current code.
 
 1. Install the plugin ZIP using Decky Loader's developer/plugin installation
    workflow.
-2. Open **Remote PC Power → Settings → Add PC**.
+2. Open **Decky My Rig → Settings → Add PC**.
 3. Enter a name, hostname/IP, host port, MAC address, and optional broadcast
    address, then choose **Save**. The PC may be powered off and no pairing code
    or network connection is required.
 4. The saved PC appears as **Not paired** and can already be started with WOL.
-5. When the PC is awake, choose **Pair**, open `DeckyPowerHostControl` on
+5. When the PC is awake, choose **Pair**, open `DeckyMyRigHostControl` on
    Windows, generate a code, and enter that code in the separate pairing form.
 
 Repeat for each PC. Every PC keeps an independent address, port, MAC, host
@@ -81,7 +81,7 @@ identity, and credential.
 The only ordinary host setting is beside the executable:
 
 ```text
-C:\Program Files\DeckyPowerHost\DeckyPowerHost.toml
+C:\Program Files\DeckyMyRigHost\DeckyMyRigHost.toml
 ```
 
 ```toml
@@ -98,20 +98,20 @@ To change a port:
 1. edit TOML as Administrator;
 2. rerun the same Setup executable—this preserves TOML and recreates the narrow
    Private firewall rule for its current port;
-3. restart the `DeckyPowerHost` service;
+3. restart the `DeckyMyRigHost` service;
 4. update only that PC's **Host port** in Decky.
 
 Reinstallation/upgrades use Inno Setup's `onlyifdoesntexist` rule and never
 replace existing TOML. You do not need to reinstall merely to change the port;
 rerunning Setup is the supported firewall synchronization mechanism.
 
-`DeckyPowerHostControl` shows the running host version and provides a guided
+`DeckyMyRigHostControl` shows the running host version and provides a guided
 update. It accepts installers only from this repository's HTTPS release path,
 enforces the release-manifest SHA-256, validates the Windows Authenticode trust
 chain, and pins the release signing-certificate thumbprint embedded at build
 time before requesting elevation. Running the verified Setup upgrades the
 service in place.
-The machine DPAPI identity in `%ProgramData%\DeckyPowerHost` is outside the
+The machine DPAPI identity in `%ProgramData%\DeckyMyRigHost` is outside the
 installation directory, so host upgrades preserve the host UUID and pairing
 credential. Decky Loader manages plugin package updates; the plugin reopens the
 same versioned settings and credential files after replacement. Compatible host
@@ -147,7 +147,7 @@ constant-time implementations. The paired stable host UUID prevents an address
 being silently reassigned to another PC.
 
 Windows stores host identity and credentials under
-`%ProgramData%\DeckyPowerHost\credentials.dpapi`, encrypted using machine-scope
+`%ProgramData%\DeckyMyRigHost\credentials.dpapi`, encrypted using machine-scope
 DPAPI and restricted to SYSTEM/Administrators. SteamOS provides no universally
 available OS keyring for Decky plugins, so Deck credentials are kept outside
 frontend-visible settings in a mode-0600 backend file. This limits exposure but
@@ -155,7 +155,7 @@ does not protect against another process already running as the `deck` user.
 Secrets are never displayed or logged.
 
 Operational host logs are written to
-`%ProgramData%\DeckyPowerHost\DeckyPowerHost.log`. They include version, protocol,
+`%ProgramData%\DeckyMyRigHost\DeckyMyRigHost.log`. They include version, protocol,
 config path, selected port, authentication rejection categories, pairing success,
 and shutdown acceptance/failure, but never codes, credentials, or authorization
 headers.
@@ -173,7 +173,7 @@ Enable Wake-on-LAN in BIOS/UEFI and in the Windows network adapter's Power
 Management/Advanced settings. Wired Ethernet is most reliable. The PC must keep
 its NIC powered while shut down. If subnet broadcast is not sufficient, enter
 the LAN's explicit broadcast address in Decky. The backend sends standard magic
-packets on UDP ports 9 and 7; DeckyPowerHost is not involved in startup.
+packets on UDP ports 9 and 7; DeckyMyRigHost is not involved in startup.
 
 ## Troubleshooting
 
@@ -185,7 +185,7 @@ packets on UDP ports 9 and 7; DeckyPowerHost is not involved in startup.
   Private firewall rule.
 - **Port already in use:** choose another valid TOML port, rerun Setup, restart
   the service, and update Decky.
-- **Pairing fails:** open `DeckyPowerHostControl`, verify the service is Running,
+- **Pairing fails:** open `DeckyMyRigHostControl`, verify the service is Running,
   and generate a fresh five-minute code. The device configuration remains saved
   after wrong or expired codes. Generating a new code invalidates the previous
   code; successful re-pairing replaces the previous Deck credential. A lost
@@ -196,7 +196,7 @@ packets on UDP ports 9 and 7; DeckyPowerHost is not involved in startup.
   DNS, and a stopped service can resemble a powered-off PC.
 - **Shutdown rejected:** inspect the Windows service log and validate the
   LocalSystem shutdown privilege on Windows. No shell fallback exists.
-- **Host version incompatible:** update DeckyPowerHost with the current Setup.
+- **Host version incompatible:** update DeckyMyRigHost with the current Setup.
 - **Invalid host config:** correct TOML syntax and port range, then restart.
 
 ## Developer setup
@@ -217,7 +217,7 @@ toolchains from their official sources:
   for the optional one-command Windows toolchain setup
 
 The Rust build downloads a pinned vendored `protoc`; no system Protobuf compiler
-is required. The protocol source remains [decky_power.proto](proto/decky_power.proto).
+is required. The protocol source remains [decky_my_rig.proto](proto/decky_my_rig.proto).
 
 ### Build and test the Decky plugin on Linux/WSL
 
@@ -234,14 +234,14 @@ npm run zip
 
 The frontend artifact is `decky/dist/index.js`; all distributable artifacts are
 collected in the repository-level `out/` directory. The installable plugin is
-`out/plugin/RemotePCPower.zip`. The ZIP command checks that pinned Python dependencies
+`out/plugin/DekyMyRig_Plugin.zip`. The ZIP command checks that pinned Python dependencies
 were bundled first. For live Decky development, install and
 configure the official Decky CLI, then use its plugin build/deploy commands from
 the repository root as documented by the
 [official template](https://github.com/SteamDeckHomebrew/decky-plugin-template)
 and [development guide](https://wiki.deckbrew.xyz/en/loader-dev/development).
 
-GitHub Actions uploads `out/plugin/RemotePCPower.zip` as the portable plugin
+GitHub Actions uploads `out/plugin/DekyMyRig_Plugin.zip` as the portable plugin
 artifact. Extract that archive before using Decky Loader's plugin installation
 workflow.
 
@@ -263,8 +263,8 @@ cd host
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
 cargo test
-printf 'port = 47991\n' > DeckyPowerHost.toml
-cargo run -- --dev --mock-shutdown --config DeckyPowerHost.toml
+printf 'port = 47991\n' > DeckyMyRigHost.toml
+cargo run -- --dev --mock-shutdown --config DeckyMyRigHost.toml
 ```
 
 Development mode uses real HTTP, Protobuf, SPAKE2, HMAC, and persistence, but its
@@ -307,9 +307,9 @@ powershell -ExecutionPolicy Bypass -File scripts\build-windows.ps1
 Artifacts:
 
 ```text
-out\host\DeckyPowerHost.exe
-out\control\DeckyPowerHostControl.exe
-out\host\DeckyPowerHost-Setup.exe
+out\host\DeckyMyRigHost.exe
+out\control\DeckyMyRigHostControl.exe
+out\host\DeckyMyRig_Host__Windows_x64.exe
 ```
 
 ### Build everything locally from WSL
@@ -326,7 +326,7 @@ The setup script uses the official tools provided through `winget` packages
 [`Microsoft.VisualStudio.2022.BuildTools`](https://visualstudio.microsoft.com/downloads/),
 and [`JRSoftware.InnoSetup`](https://jrsoftware.org/isdl.php). It installs the
 stable Rust MSVC target, rustfmt, and Clippy. It does not install or start
-DeckyPowerHost, create a service, alter the firewall, or execute the installer.
+DeckyMyRigHost, create a service, alter the firewall, or execute the installer.
 
 Windows interoperability is optional and not part of the portable gate. To run
 the native Windows build from WSL when Windows build tools are deliberately
@@ -364,7 +364,7 @@ CI runner validate linking and installer compilation.
 Uninstall always stops/deletes the service, removes the binary, and deletes the
 firewall rule. TOML and DPAPI pairing state are retained deliberately for easy
 reinstallation. For permanent removal, delete the retained TOML and
-`%ProgramData%\DeckyPowerHost` as Administrator after uninstalling.
+`%ProgramData%\DeckyMyRigHost` as Administrator after uninstalling.
 
 ## Validation
 

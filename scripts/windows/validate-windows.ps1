@@ -1,9 +1,9 @@
 param([switch]$AllowShutdownTest)
 $ErrorActionPreference = "Stop"
-$InstallDirectory = Join-Path $env:ProgramFiles "DeckyPowerHost"
-$ConfigPath = Join-Path $InstallDirectory "DeckyPowerHost.toml"
-$HostPath = Join-Path $InstallDirectory "DeckyPowerHost.exe"
-$ControlPath = Join-Path $InstallDirectory "DeckyPowerHostControl.exe"
+$InstallDirectory = Join-Path $env:ProgramFiles "DeckyMyRigHost"
+$ConfigPath = Join-Path $InstallDirectory "DeckyMyRigHost.toml"
+$HostPath = Join-Path $InstallDirectory "DeckyMyRigHost.exe"
+$ControlPath = Join-Path $InstallDirectory "DeckyMyRigHostControl.exe"
 $results = [ordered]@{
     Timestamp = (Get-Date).ToString("o")
     Os = [Environment]::OSVersion.VersionString
@@ -36,7 +36,7 @@ if ($results.ConfigExists) {
         }
     }
 }
-$service = Get-Service DeckyPowerHost -ErrorAction SilentlyContinue
+$service = Get-Service DeckyMyRigHost -ErrorAction SilentlyContinue
 if ($service) { $results.ServiceInstalled = $true; $results.ServiceStatus = $service.Status.ToString() }
 if ($results.ConfiguredPort) {
     $results.PortListening = [bool](Get-NetTCPConnection -State Listen -LocalPort $results.ConfiguredPort -ErrorAction SilentlyContinue)
@@ -48,8 +48,8 @@ if ($results.ConfiguredPort) {
     }
     $results.LocalStatusEndpointReachable = $results.LocalStatusHttpStatus -in @(200, 401)
 }
-$results.ManagementPipeExists = [bool](Get-ChildItem "\\.\pipe\" -ErrorAction SilentlyContinue | Where-Object Name -eq "DeckyPowerHostControl")
-$firewallRules = @(Get-NetFirewallRule -DisplayName DeckyPowerHost -ErrorAction SilentlyContinue)
+$results.ManagementPipeExists = [bool](Get-ChildItem "\\.\pipe\" -ErrorAction SilentlyContinue | Where-Object Name -eq "DeckyMyRigHostControl")
+$firewallRules = @(Get-NetFirewallRule -DisplayName DeckyMyRigHost -ErrorAction SilentlyContinue)
 $results.FirewallRuleExists = $firewallRules.Count -gt 0
 $results.FirewallProfiles = @($firewallRules | ForEach-Object Profile | ForEach-Object { $_.ToString() })
 if ($AllowShutdownTest) {

@@ -9,7 +9,7 @@ export default definePlugin(() => {
   routerHook.addRoute("/decky-remote-power/settings", Settings);
   routerHook.addRoute("/decky-remote-power/host-setup", HostSetup);
   return {
-    name: "Remote PC Power",
+    name: "Decky My Rig",
     titleView: <TitleView/>,
     content: <QuickAccess/>,
     icon: <FaPowerOff/>,

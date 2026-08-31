@@ -24,7 +24,7 @@ use crate::{
     storage::{CredentialStore, windows::WindowsCredentialStore},
 };
 
-const SERVICE_NAME: &str = "DeckyPowerHost";
+const SERVICE_NAME: &str = "DeckyMyRigHost";
 
 define_windows_service!(ffi_service_main, service_main);
 
@@ -35,7 +35,7 @@ pub fn dispatch() -> anyhow::Result<()> {
 
 fn service_main(_arguments: Vec<OsString>) {
     if let Err(error_value) = run_service() {
-        tracing::error!(error = %error_value, "DeckyPowerHost service stopped with an error");
+        tracing::error!(error = %error_value, "DeckyMyRigHost service stopped with an error");
     }
 }
 
@@ -71,7 +71,7 @@ fn run_service() -> anyhow::Result<()> {
     } else {
         PairingCode::generate()
     };
-    tracing::info!(version = HOST_VERSION, protocol_version = PROTOCOL_VERSION, config = %config_path.display(), port = config.port, "DeckyPowerHost service starting");
+    tracing::info!(version = HOST_VERSION, protocol_version = PROTOCOL_VERSION, config = %config_path.display(), port = config.port, "DeckyMyRigHost service starting");
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()?;

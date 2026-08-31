@@ -46,7 +46,7 @@ export function Settings(): JSX.Element {
   if (editing) return <div style={{ paddingBottom: "16px" }}>
     <Focusable flow-children="horizontal" style={{ display: "flex", alignItems: "center", gap: "12px", position: "sticky", top: 0, zIndex: 10, padding: "12px 0", background: "#0e141b" }}>
       <DialogButton
-        aria-label="Back to Remote PCs"
+        aria-label="Back to PCs"
         onClick={() => setEditing(undefined)}
         style={{ width: "48px", minWidth: "48px", height: "40px", padding: "8px" }}>
         <FaChevronLeft aria-hidden="true"/>
@@ -55,7 +55,7 @@ export function Settings(): JSX.Element {
     </Focusable>
     <PanelSection><PanelSectionRow><DeviceForm device={editing === "new" ? undefined : editing} onSaved={finished} onCancel={() => setEditing(undefined)}/></PanelSectionRow></PanelSection>
   </div>;
-  return <PanelSection title="Remote PCs">
+  return <PanelSection title="PCs">
     {error && <PanelSectionRow><p role="alert">{error}</p></PanelSectionRow>}
     {devices.length === 0 && <PanelSectionRow><p>No PCs configured. You can add a powered-off PC now and pair it later.</p></PanelSectionRow>}
     {devices.map((device) => <PanelSectionRow key={device.id}><Focusable flow-children="horizontal" style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%" }}>

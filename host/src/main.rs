@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::fs::OpenOptions;
 use std::sync::Arc;
 
-use decky_power_host::{
+use decky_my_rig_host::{
     HOST_VERSION, PROTOCOL_VERSION,
     auth::Authenticator,
     config::HostConfig,
@@ -23,7 +23,7 @@ async fn main() -> anyhow::Result<()> {
     let _log_guard = init_logging(&arguments)?;
     if arguments.iter().any(|arg| arg == "--service") {
         #[cfg(windows)]
-        return decky_power_host::service::windows::dispatch();
+        return decky_my_rig_host::service::windows::dispatch();
         #[cfg(not(windows))]
         anyhow::bail!("service mode is only supported on Windows");
     }
@@ -44,7 +44,7 @@ async fn run_portable(arguments: Vec<String>) -> anyhow::Result<()> {
     } else {
         config.port
     };
-    let state_path = config_path.with_file_name("DeckyPowerHost.dev-state.json");
+    let state_path = config_path.with_file_name("DeckyMyRigHost.dev-state.json");
     let store: Arc<dyn CredentialStore> = Arc::new(DevelopmentStore { path: state_path });
     let mut identity = store.load_or_create()?;
     let requested_code = arguments
@@ -54,26 +54,26 @@ async fn run_portable(arguments: Vec<String>) -> anyhow::Result<()> {
     let pairing = if let Some(code) = requested_code {
         let pairing = PairingCode::from_code(code)?;
         identity.pairing_code = Some(pairing.display_code().to_owned());
-        identity.pairing_created_at = decky_power_host::auth::now_unix();
+        identity.pairing_created_at = decky_my_rig_host::auth::now_unix();
         store.save(&identity)?;
         pairing
     } else if let Some(code) = identity.pairing_code.clone() {
         PairingCode::from_code_with_age(
             code,
-            decky_power_host::management::persisted_code_age(
+            decky_my_rig_host::management::persisted_code_age(
                 identity.pairing_created_at,
-                decky_power_host::auth::now_unix(),
+                decky_my_rig_host::auth::now_unix(),
             ),
         )?
     } else {
         PairingCode::generate()
     };
-    println!("DeckyPowerHost pairing code: {}", pairing.display_code());
-    tracing::info!(version = HOST_VERSION, protocol_version = PROTOCOL_VERSION, config = %config_path.display(), port = config.port, "DeckyPowerHost starting in safe development mode");
+    println!("DeckyMyRigHost pairing code: {}", pairing.display_code());
+    tracing::info!(version = HOST_VERSION, protocol_version = PROTOCOL_VERSION, config = %config_path.display(), port = config.port, "DeckyMyRigHost starting in safe development mode");
     let listener = server::bind(listen_port)
         .await
         .map_err(|error| anyhow::anyhow!("could not listen on 0.0.0.0:{listen_port}: {error}"))?;
-    println!("DECKY_POWER_LISTEN_PORT={}", listener.local_addr()?.port());
+    println!("DECKY_MY_RIG_LISTEN_PORT={}", listener.local_addr()?.port());
     let hostname = hostname::get()?.to_string_lossy().into_owned();
     let latest_client_version = identity.last_client_version.clone();
     server::serve(
@@ -96,14 +96,14 @@ fn init_logging(
     arguments: &[String],
 ) -> anyhow::Result<Option<tracing_appender::non_blocking::WorkerGuard>> {
     let filter = tracing_subscriber::EnvFilter::from_default_env()
-        .add_directive("decky_power_host=info".parse()?);
+        .add_directive("decky_my_rig_host=info".parse()?);
     #[cfg(windows)]
     if arguments.iter().any(|argument| argument == "--service") {
         let directory = std::env::var_os("ProgramData")
             .map(PathBuf::from)
             .ok_or_else(|| anyhow::anyhow!("ProgramData is unavailable"))?
-            .join("DeckyPowerHost");
-        let log_path = directory.join("DeckyPowerHost.log");
+            .join("DeckyMyRigHost");
+        let log_path = directory.join("DeckyMyRigHost.log");
         rotate_log_if_needed(&log_path, 5 * 1024 * 1024)?;
         match std::fs::create_dir_all(&directory)
             .and_then(|_| OpenOptions::new().create(true).append(true).open(&log_path))
@@ -119,7 +119,7 @@ fn init_logging(
             }
             Err(error) => {
                 eprintln!(
-                    "DeckyPowerHost could not open its service log at {}: {error}. Logging to stderr.",
+                    "DeckyMyRigHost could not open its service log at {}: {error}. Logging to stderr.",
                     log_path.display()
                 );
             }
@@ -159,7 +159,7 @@ mod logging_tests {
     #[test]
     fn service_log_rotation_is_bounded_to_one_archive() {
         let directory = tempfile::tempdir().unwrap();
-        let path = directory.path().join("DeckyPowerHost.log");
+        let path = directory.path().join("DeckyMyRigHost.log");
         std::fs::write(&path, b"old log").unwrap();
         std::fs::write(path.with_extension("log.1"), b"older log").unwrap();
 

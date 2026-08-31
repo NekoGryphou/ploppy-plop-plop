@@ -25,19 +25,19 @@ if (-not (Get-Command cargo.exe -ErrorAction SilentlyContinue)) {
 }
 
 if ($SourceProjectDirectory.StartsWith("\\")) {
-    $TemporaryBuildDirectory = Join-Path $env:TEMP ("DeckyPowerHost-build-" + [Guid]::NewGuid().ToString("N"))
+    $TemporaryBuildDirectory = Join-Path $env:TEMP ("DeckyMyRigHost-build-" + [Guid]::NewGuid().ToString("N"))
     New-Item -ItemType Directory -Force $TemporaryBuildDirectory | Out-Null
     Copy-Item (Join-Path $SourceProjectDirectory "host") $TemporaryBuildDirectory -Recurse
     Copy-Item (Join-Path $SourceProjectDirectory "proto") $TemporaryBuildDirectory -Recurse
     $TemporaryToolsDirectory = Join-Path $TemporaryBuildDirectory "tools"
     New-Item -ItemType Directory -Force $TemporaryToolsDirectory | Out-Null
-    Copy-Item (Join-Path $SourceProjectDirectory "tools\decky-power-test") $TemporaryToolsDirectory -Recurse
+    Copy-Item (Join-Path $SourceProjectDirectory "tools\decky-my-rig-test") $TemporaryToolsDirectory -Recurse
     $BuildProjectDirectory = $TemporaryBuildDirectory
     Write-Host "WSL path detected; compiling in $TemporaryBuildDirectory"
 }
 
 $HostDirectory = Join-Path $BuildProjectDirectory "host"
-$HostExecutable = Join-Path $HostDirectory "target\x86_64-pc-windows-msvc\release\decky-power-host.exe"
+$HostExecutable = Join-Path $HostDirectory "target\x86_64-pc-windows-msvc\release\decky-my-rig-host.exe"
 $ControlOutputDirectory = Join-Path $BuildProjectDirectory "out\control"
 $BuildOutputDirectory = Join-Path $BuildProjectDirectory "out\host"
 
@@ -52,22 +52,22 @@ try {
     Pop-Location
 }
 
-Copy-Item $HostExecutable (Join-Path $BuildOutputDirectory "DeckyPowerHost.exe") -Force
-Push-Location (Join-Path $BuildProjectDirectory "tools\decky-power-test")
+Copy-Item $HostExecutable (Join-Path $BuildOutputDirectory "DeckyMyRigHost.exe") -Force
+Push-Location (Join-Path $BuildProjectDirectory "tools\decky-my-rig-test")
 try {
     cargo build --release
 } finally { Pop-Location }
 $dotnet8Sdks = if (Get-Command dotnet.exe -ErrorAction SilentlyContinue) { @(dotnet.exe --list-sdks | Where-Object { $_ -match '^8\.' }) } else { @() }
 if ($dotnet8Sdks.Count -eq 0) { throw ".NET 8 SDK was not found. Run scripts\setup-windows-build.ps1 first." }
-dotnet.exe test (Join-Path $BuildProjectDirectory "host\control\DeckyPowerHostControl.Core.Tests\DeckyPowerHostControl.Core.Tests.csproj") -c Release
+dotnet.exe test (Join-Path $BuildProjectDirectory "host\control\DeckyMyRigHostControl.Core.Tests\DeckyMyRigHostControl.Core.Tests.csproj") -c Release
 if ($LASTEXITCODE -ne 0) { throw "WinUI model tests failed (exit $LASTEXITCODE)." }
 $SigningThumbprintProperty = if ([string]::IsNullOrWhiteSpace($env:SIGNING_CERTIFICATE_THUMBPRINT)) { "UNCONFIGURED" } else { $env:SIGNING_CERTIFICATE_THUMBPRINT }
-dotnet.exe publish (Join-Path $BuildProjectDirectory "host\control\DeckyPowerHostControl\DeckyPowerHostControl.csproj") -c Release -r win-x64 --self-contained true -o $ControlOutputDirectory -p:DeckySigningCertificateThumbprint=$SigningThumbprintProperty
-if ($LASTEXITCODE -ne 0) { throw "DeckyPowerHostControl publish failed (exit $LASTEXITCODE)." }
+dotnet.exe publish (Join-Path $BuildProjectDirectory "host\control\DeckyMyRigHostControl\DeckyMyRigHostControl.csproj") -c Release -r win-x64 --self-contained true -o $ControlOutputDirectory -p:DeckySigningCertificateThumbprint=$SigningThumbprintProperty
+if ($LASTEXITCODE -ne 0) { throw "DeckyMyRigHostControl publish failed (exit $LASTEXITCODE)." }
 $SigningScript = Join-Path $SourceProjectDirectory "scripts\windows\sign-artifacts.ps1"
 & $SigningScript -Paths @(
-    (Join-Path $BuildOutputDirectory "DeckyPowerHost.exe"),
-    (Join-Path $ControlOutputDirectory "DeckyPowerHostControl.exe")
+    (Join-Path $BuildOutputDirectory "DeckyMyRigHost.exe"),
+    (Join-Path $ControlOutputDirectory "DeckyMyRigHostControl.exe")
 )
 $InnoSetupCandidates = @(
     (Join-Path ${env:ProgramFiles(x86)} "Inno Setup 7\ISCC.exe"),
@@ -79,16 +79,16 @@ $InnoSetup = $InnoSetupCandidates | Where-Object { Test-Path $_ } | Select-Objec
 if (-not $InnoSetup) {
     throw "Inno Setup was not found. Install it from https://jrsoftware.org/isdl.php"
 }
-& $InnoSetup (Join-Path $BuildProjectDirectory "host\installer\DeckyPowerHost.iss")
+& $InnoSetup (Join-Path $BuildProjectDirectory "host\installer\DeckyMyRigHost.iss")
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed (exit $LASTEXITCODE)." }
-& $SigningScript -Paths @((Join-Path $BuildOutputDirectory "DeckyPowerHost-Setup.exe"))
+& $SigningScript -Paths @((Join-Path $BuildOutputDirectory "DeckyMyRig_Host__Windows_x64.exe"))
 if ($TemporaryBuildDirectory) {
     $SourceControlOutput = Join-Path $SourceProjectDirectory "out\control"
     New-Item -ItemType Directory -Force $SourceOutputDirectory | Out-Null
     New-Item -ItemType Directory -Force $SourceControlOutput | Out-Null
     Copy-Item (Join-Path $ControlOutputDirectory "*") $SourceControlOutput -Recurse -Force
-    Copy-Item (Join-Path $BuildOutputDirectory "DeckyPowerHost.exe") $SourceOutputDirectory -Force
-    Copy-Item (Join-Path $BuildOutputDirectory "DeckyPowerHost-Setup.exe") $SourceOutputDirectory -Force
+    Copy-Item (Join-Path $BuildOutputDirectory "DeckyMyRigHost.exe") $SourceOutputDirectory -Force
+    Copy-Item (Join-Path $BuildOutputDirectory "DeckyMyRig_Host__Windows_x64.exe") $SourceOutputDirectory -Force
     Remove-Item $TemporaryBuildDirectory -Recurse -Force
 }
 Write-Host "Windows host, protocol client, WinUI control app, and installer artifacts created. WINDOWS CI/LOCAL WINDOWS VERIFIED only if this script completed on Windows."

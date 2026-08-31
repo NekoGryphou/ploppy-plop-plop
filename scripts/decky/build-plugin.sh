@@ -4,8 +4,8 @@ set -euo pipefail
 project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 staging_dir="$(mktemp -d)"
 trap 'rm -rf "$staging_dir"' EXIT
-package_dir="$staging_dir/RemotePCPower"
-archive="$project_dir/out/plugin/RemotePCPower.zip"
+package_dir="$staging_dir/DeckyMyRig"
+archive="$project_dir/out/plugin/DekyMyRig_Plugin.zip"
 decky_dir="$project_dir/decky"
 
 if [[ ! -d "$decky_dir/py_modules/spake2" || ! -d "$decky_dir/py_modules/cryptography" ]]; then

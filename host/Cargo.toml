@@ -1,9 +1,9 @@
 [package]
-name = "decky-power-host"
+name = "decky-my-rig-host"
 version = "0.1.0"
 edition = "2024"
 license = "BSD-3-Clause"
-description = "Native Windows companion for Decky Remote PC Power"
+description = "Native Windows companion for Decky My Rig"
 
 [features]
 test-management = []

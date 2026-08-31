@@ -28,9 +28,9 @@ Run `scripts\validate-windows.ps1` first and retain its JSON result. Do not use
 
 ## Pairing over the LAN
 
-1. Start `DeckyPowerHost` and open `DeckyPowerHostControl` on Windows.
+1. Start `DeckyMyRigHost` and open `DeckyMyRigHostControl` on Windows.
 2. Confirm the control window remains open, reports **Running**, and displays
-   the same port configured in `DeckyPowerHost.toml`.
+   the same port configured in `DeckyMyRigHost.toml`.
 3. Generate a pairing code and leave the window visible.
 4. From the Deck, create the PC using name, LAN address, port, and manual MAC,
    with no pairing code. Confirm the saved device says **Not paired**.

@@ -4,10 +4,10 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from decky_power.client import HostError
-from decky_power.controller import Controller
-from decky_power.models import DeviceState, PairingState
-from decky_power.store import Store
+from decky_my_rig.client import HostError
+from decky_my_rig.controller import Controller
+from decky_my_rig.models import DeviceState, PairingState
+from decky_my_rig.store import Store
 
 
 class FakeClient:
@@ -66,7 +66,7 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.client.shutdown_ports, [48100])
 
     async def test_start_and_stop_transitions(self) -> None:
-        with patch("decky_power.controller.send_magic_packet") as wake:
+        with patch("decky_my_rig.controller.send_magic_packet") as wake:
             started = await self.controller.start(self.first.id)
             wake.assert_called_once_with("AA:BB:CC:DD:EE:FF", None)
         self.assertEqual(started["state"], DeviceState.STARTING.value)
@@ -96,7 +96,7 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
     async def test_minor_version_difference_reports_the_update_direction(self) -> None:
         self.client.host_versions[self.first.port] = "0.0.9"
         update_host = await self.controller.status(self.first.id)
-        self.assertIn("Update DeckyPowerHost", update_host["message"])
+        self.assertIn("Update DeckyMyRigHost", update_host["message"])
 
         self.client.host_versions[self.first.port] = "0.2.0"
         update_plugin = await self.controller.status(self.first.id)
@@ -108,7 +108,7 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_unpaired_device_can_wake_but_cannot_shutdown(self) -> None:
         unpaired = self.store.upsert({"name": "Unpaired", "address": "off.local", "mac": "AABBCCDDEEFF", "port": 49000, "broadcastAddress": "192.168.1.255"})
-        with patch("decky_power.controller.send_magic_packet") as wake:
+        with patch("decky_my_rig.controller.send_magic_packet") as wake:
             result = await self.controller.start(unpaired.id)
         wake.assert_called_once_with("AA:BB:CC:DD:EE:FF", "192.168.1.255")
         self.assertEqual(result["state"], DeviceState.STARTING.value)
@@ -181,7 +181,7 @@ class ControllerTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_unexpected_status_failure_is_logged_with_device_context(self) -> None:
         self.client.errors[self.first.port] = RuntimeError("injected bug")
-        with self.assertLogs("decky_power.controller", level="ERROR") as logs:
+        with self.assertLogs("decky_my_rig.controller", level="ERROR") as logs:
             result = await self.controller.statuses()
 
         self.assertEqual(result[self.first.id]["state"], DeviceState.UNKNOWN.value)

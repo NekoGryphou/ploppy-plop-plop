@@ -7,10 +7,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from decky_power.client import HostClient
-from decky_power.controller import Controller
-from decky_power.models import DeviceState, PairingState
-from decky_power.store import Store
+from decky_my_rig.client import HostClient
+from decky_my_rig.controller import Controller
+from decky_my_rig.models import DeviceState, PairingState
+from decky_my_rig.store import Store
 
 
 class DelayedTcpProxy:
@@ -66,7 +66,7 @@ class MultiPcE2ETests(unittest.IsolatedAsyncioTestCase):
     async def start_host(self, name: str, code: str) -> int:
         config = self.directory / f"{name}.toml"
         config.write_text("port = 47991\n", "utf-8")
-        executable = Path(__file__).parents[3] / "host" / "target" / "debug" / "decky-power-host"
+        executable = Path(__file__).parents[3] / "host" / "target" / "debug" / "decky-my-rig-host"
         process = subprocess.Popen(
             [str(executable), "--dev", "--mock-shutdown", "--ephemeral-port", "--config", str(config), "--pairing-code-value", code],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
@@ -75,7 +75,7 @@ class MultiPcE2ETests(unittest.IsolatedAsyncioTestCase):
         assert process.stdout is not None
         for _ in range(50):
             line = await asyncio.wait_for(asyncio.to_thread(process.stdout.readline), timeout=2)
-            if line.startswith("DECKY_POWER_LISTEN_PORT="): return int(line.split("=", 1)[1])
+            if line.startswith("DECKY_MY_RIG_LISTEN_PORT="): return int(line.split("=", 1)[1])
             if process.poll() is not None: self.fail(f"{name} exited early: {line}")
         self.fail(f"{name} did not report a port")
 

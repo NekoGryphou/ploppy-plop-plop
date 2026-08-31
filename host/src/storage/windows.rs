@@ -25,7 +25,7 @@ impl WindowsCredentialStore {
             .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "ProgramData is unavailable"))?;
         Ok(Self {
             path: PathBuf::from(root)
-                .join("DeckyPowerHost")
+                .join("DeckyMyRigHost")
                 .join("credentials.dpapi"),
         })
     }

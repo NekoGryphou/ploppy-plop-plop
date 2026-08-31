@@ -1,7 +1,7 @@
 # Architecture
 
-Decky Remote PC Power is split into four trust boundaries: an unprivileged React
-view, the Decky Python backend, the native Windows `DeckyPowerHost` service, and
+Decky My Rig is split into four trust boundaries: an unprivileged React
+view, the Decky Python backend, the native Windows `DeckyMyRigHost` service, and
 the interactive WinUI 3 control application. Only the Decky backend can access
 Deck-side credentials or the LAN protocol. The WinUI application uses a narrow
 local named pipe and never owns pairing state.
@@ -9,7 +9,7 @@ local named pipe and never owns pairing state.
 ## Repository layout
 
 - `decky/src/`: strict TypeScript Quick Access and settings UI.
-- `decky/main.py` and `decky/py_modules/decky_power/`: Decky backend.
+- `decky/main.py` and `decky/py_modules/decky_my_rig/`: Decky backend.
 - `proto/`: the versioned wire contract shared by both implementations.
 - `host/`: complete Windows host product: portable Rust server core, narrowly
   gated Windows integration, WinUI 3 control application, and installer.
@@ -95,9 +95,9 @@ identical final request can recover from a lost response without rotating the
 credential again.
 
 The service is the sole source of truth for pairing-code generation, expiration,
-attempt limiting, and regeneration. `DeckyPowerHostControl` requests only
+attempt limiting, and regeneration. `DeckyMyRigHostControl` requests only
 service info, pairing state, or a new code over
-`\\.\pipe\DeckyPowerHostControl`. The pipe rejects remote clients and its ACL
+`\\.\pipe\DeckyMyRigHostControl`. The pipe rejects remote clients and its ACL
 grants access only to LocalSystem and local Administrators. The WinUI application
 requests elevation before connecting. No LAN route returns the current code.
 Transient pipe creation and connection failures use bounded exponential retry;
@@ -118,7 +118,7 @@ Authenticated requests carry hexadecimal headers `X-Decky-Timestamp`,
 `X-Decky-Nonce`, and `X-Decky-Signature`. The signed byte sequence is:
 
 ```
-"deckypower-auth-v1\0" ||
+"deckymyrig-auth-v1\0" ||
 u64_be(timestamp) ||
 u16_be(nonce_length) || nonce ||
 u16_be(method_length) || uppercase_ascii_method ||
@@ -162,7 +162,7 @@ Unicode `InitiateShutdownW` API with a planned application-maintenance reason.
 Tests always inject `MockPowerController`.
 
 The service is a GUI-subsystem release executable and never creates interactive
-UI. `DeckyPowerHostControl.exe` is a separate C# WinUI 3 `WinExe`; it maintains a
+UI. `DeckyMyRigHostControl.exe` is a separate C# WinUI 3 `WinExe`; it maintains a
 normal persistent elevated window and obtains state through the local pipe. Windows host
 identity, pairing-code state, and the credential are stored together in a
 machine-scope DPAPI file restricted to SYSTEM and Administrators. Updates use an

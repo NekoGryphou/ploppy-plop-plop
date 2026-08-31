@@ -38,13 +38,13 @@ is deliberately excluded from automated tests. Record the Windows version, host
 commit, installer version, Decky Loader version, and network profile first.
 
 - [ ] Run Setup and confirm the normal UAC elevation prompt explains publisher/admin access.
-- [ ] Confirm `C:\Program Files\DeckyPowerHost\DeckyPowerHost.toml` exists beside the EXE.
+- [ ] Confirm `C:\Program Files\DeckyMyRigHost\DeckyMyRigHost.toml` exists beside the EXE.
 - [ ] Confirm it contains `port = 47991` on a fresh install.
 - [ ] Confirm no console window appears for the service.
 - [ ] Confirm TCP `0.0.0.0:47991` is listening.
 - [ ] Confirm the inbound firewall rule follows the configured port and is Private only.
 - [ ] Confirm the rule does not allow Public-profile traffic.
-- [ ] Launch the Start-menu **Decky Power Host** shortcut and confirm a persistent normal WinUI 3 window remains open.
+- [ ] Launch the Start-menu **Decky My Rig Host** shortcut and confirm a persistent normal WinUI 3 window remains open.
 - [ ] Confirm service state and configured port are visible.
 - [ ] Confirm a six-digit pairing code and expiration countdown remain visible.
 - [ ] Confirm **Generate new code** replaces the code and invalidates the old one.
@@ -56,7 +56,7 @@ commit, installer version, Decky Loader version, and network profile first.
 - [ ] Update that device to port 48100 in Decky.
 - [ ] Confirm authenticated status and new pairing both work on port 48100.
 - [ ] Confirm a device configured with the old/wrong port reports an actionable unavailable error.
-- [ ] Confirm `DeckyPowerHost.exe --dev --mock-shutdown --config <path>` uses real HTTP/Protobuf/auth but never shuts down.
+- [ ] Confirm `DeckyMyRigHost.exe --dev --mock-shutdown --config <path>` uses real HTTP/Protobuf/auth but never shuts down.
 - [ ] On a safe physical test PC, confirm real shutdown uses the Windows API and powers off.
 - [ ] Wake it using Decky WOL and confirm the service starts automatically after boot.
 - [ ] Confirm Decky moves Offline → Starting → Online.
@@ -67,7 +67,7 @@ commit, installer version, Decky Loader version, and network profile first.
 - [ ] Exercise a host/plugin protocol mismatch and confirm “host update required” guidance.
 - [ ] Uninstall and confirm service and firewall rule removal.
 - [ ] Confirm TOML and DPAPI credentials remain, as documented, for reinstall continuity.
-- [ ] Delete retained `C:\Program Files\DeckyPowerHost\DeckyPowerHost.toml` and `%ProgramData%\DeckyPowerHost` manually when permanent credential removal is desired.
+- [ ] Delete retained `C:\Program Files\DeckyMyRigHost\DeckyMyRigHost.toml` and `%ProgramData%\DeckyMyRigHost` manually when permanent credential removal is desired.
 
 Before manual checks, run `scripts\windows\validate-windows.ps1` without destructive
 flags. Use `scripts\windows\collect-diagnostics.ps1` to produce a sanitized archive for

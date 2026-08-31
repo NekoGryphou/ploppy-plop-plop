@@ -10,8 +10,8 @@ from pathlib import Path
 
 
 PROJECT = Path(__file__).resolve().parents[2]
-SCHEMA = PROJECT / "proto" / "decky_power.proto"
-OUTPUT = PROJECT / "decky" / "py_modules" / "decky_power" / "generated_schema.py"
+SCHEMA = PROJECT / "proto" / "decky_my_rig.proto"
+OUTPUT = PROJECT / "decky" / "py_modules" / "decky_my_rig" / "generated_schema.py"
 
 
 def generate(source: str) -> str:
@@ -39,7 +39,7 @@ def generate(source: str) -> str:
 
     digest = hashlib.sha256(source.encode()).hexdigest()
     lines = [
-        '"""Generated from proto/decky_power.proto. Do not edit by hand."""',
+        '"""Generated from proto/decky_my_rig.proto. Do not edit by hand."""',
         "",
         f'SCHEMA_SHA256 = "{digest}"',
         "MESSAGES: dict[str, dict[str, tuple[int, str]]] = {",

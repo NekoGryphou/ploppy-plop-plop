@@ -8,8 +8,8 @@ $ErrorActionPreference = "Stop"
 if ($Version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
     throw "Release version must use strict X.Y.Z format."
 }
-$installer = Join-Path $ArtifactDirectory "DeckyPowerHost-Setup.exe"
-$plugin = Join-Path $ArtifactDirectory "RemotePCPower.zip"
+$installer = Join-Path $ArtifactDirectory "DeckyMyRig_Host__Windows_x64.exe"
+$plugin = Join-Path $ArtifactDirectory "DekyMyRig_Plugin.zip"
 foreach ($path in @($installer, $plugin)) {
     if (-not (Test-Path $path)) { throw "Release artifact is missing: $path" }
 }
@@ -19,11 +19,11 @@ $manifest = [ordered]@{
     version = $Version
     publishedAt = [DateTimeOffset]::UtcNow.ToString("O")
     host = [ordered]@{
-        url = "$base/DeckyPowerHost-Setup.exe"
+        url = "$base/DeckyMyRig_Host__Windows_x64.exe"
         sha256 = (Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant()
     }
     plugin = [ordered]@{
-        url = "$base/RemotePCPower.zip"
+        url = "$base/DekyMyRig_Plugin.zip"
         sha256 = (Get-FileHash $plugin -Algorithm SHA256).Hash.ToLowerInvariant()
     }
 }

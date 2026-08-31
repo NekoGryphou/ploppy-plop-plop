@@ -2,11 +2,11 @@ from typing import Any
 
 import decky
 
-from decky_power.client import HostClient, HostError
-from decky_power.controller import Controller
-from decky_power.discovery import DiscoveryError, discover_mac
-from decky_power.store import Store, StoreError
-from decky_power.validation import ValidationError
+from decky_my_rig.client import HostClient, HostError
+from decky_my_rig.controller import Controller
+from decky_my_rig.discovery import DiscoveryError, discover_mac
+from decky_my_rig.store import Store, StoreError
+from decky_my_rig.validation import ValidationError
 
 
 class Plugin:
@@ -15,12 +15,12 @@ class Plugin:
             self.store = Store(decky.DECKY_PLUGIN_SETTINGS_DIR)
             self.controller = Controller(self.store)
         except Exception:
-            decky.logger.exception("Remote PC Power failed to initialize")
+            decky.logger.exception("Decky My Rig failed to initialize")
             raise
-        decky.logger.info("Remote PC Power loaded")
+        decky.logger.info("Decky My Rig loaded")
 
     async def _unload(self) -> None:
-        decky.logger.info("Remote PC Power unloaded")
+        decky.logger.info("Decky My Rig unloaded")
 
     async def get_devices(self) -> dict[str, Any]:
         try:

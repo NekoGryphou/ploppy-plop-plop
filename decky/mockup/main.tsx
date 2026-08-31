@@ -23,7 +23,7 @@ function Showcase() {
             </div>
         </div>
         <div className="deck settings">
-            <header><button aria-label="Back to Remote PCs" className="back"><FaChevronLeft aria-hidden="true"/></button><h1>Add PC</h1></header>
+            <header><button aria-label="Back to PCs" className="back"><FaChevronLeft aria-hidden="true"/></button><h1>Add PC</h1></header>
             <div className="content"><DeviceForm onSaved={() => undefined} onCancel={() => undefined}/></div>
         </div>
     </main>;

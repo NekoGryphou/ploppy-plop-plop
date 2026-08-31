@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from decky_power.store import Store, StoreError
+from decky_my_rig.store import Store, StoreError
 
 
 class StoreTests(unittest.TestCase):

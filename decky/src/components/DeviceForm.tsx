@@ -57,7 +57,7 @@ export function DeviceForm({ device, onSaved, onCancel }: { device?: Device; onS
   };
 
   return <div>
-    <p>DeckyPowerHost is required for status and shutdown. Starting uses Wake-on-LAN.</p>
+    <p>DeckyMyRigHost is required for status and shutdown. Starting uses Wake-on-LAN.</p>
     <FormField label="Name"><TextField style={{ width: "100%" }} value={values.name} onChange={set("name")} disabled={busy}/></FormField>
     <FormField label="Address"><TextField style={{ width: "100%" }} value={values.address} onChange={set("address")} disabled={busy}/></FormField>
     <MacAddressField

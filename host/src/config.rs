@@ -60,7 +60,7 @@ impl HostConfig {
 
     pub fn next_to_executable() -> Result<PathBuf, ConfigError> {
         let executable = std::env::current_exe().map_err(ConfigError::Executable)?;
-        Ok(executable.with_file_name("DeckyPowerHost.toml"))
+        Ok(executable.with_file_name("DeckyMyRigHost.toml"))
     }
 }
 
@@ -71,7 +71,7 @@ mod tests {
 
     fn load(contents: Option<&str>) -> Result<HostConfig, ConfigError> {
         let dir = tempdir().unwrap();
-        let path = dir.path().join("DeckyPowerHost.toml");
+        let path = dir.path().join("DeckyMyRigHost.toml");
         if let Some(contents) = contents {
             fs::write(&path, contents).unwrap();
         }

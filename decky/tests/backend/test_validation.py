@@ -1,6 +1,6 @@
 import unittest
 
-from decky_power.validation import ValidationError, normalize_mac, validate_address, validate_port
+from decky_my_rig.validation import ValidationError, normalize_mac, validate_address, validate_port
 
 
 class ValidationTests(unittest.TestCase):

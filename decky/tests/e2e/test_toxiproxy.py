@@ -8,11 +8,11 @@ import unittest
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from decky_power.client import HostClient, HostError
-from decky_power.models import Device
+from decky_my_rig.client import HostClient, HostError
+from decky_my_rig.models import Device
 
 
-@unittest.skipUnless(os.environ.get("DECKY_POWER_TOXIPROXY") == "1", "requires Docker Compose Toxiproxy topology")
+@unittest.skipUnless(os.environ.get("DECKY_MY_RIG_TOXIPROXY") == "1", "requires Docker Compose Toxiproxy topology")
 class ToxiproxyE2ETests(unittest.IsolatedAsyncioTestCase):
     credential: bytes | None = None
     host_id: str | None = None

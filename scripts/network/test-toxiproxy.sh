@@ -13,5 +13,5 @@ fi
 cleanup() { docker compose -f "$project_dir/compose.e2e.yml" down --volumes --remove-orphans; }
 trap cleanup EXIT
 docker compose -f "$project_dir/compose.e2e.yml" up --build --wait --detach
-DECKY_POWER_TOXIPROXY=1 PYTHONPATH="$project_dir/decky/py_modules" python3 -B -m unittest \
+DECKY_MY_RIG_TOXIPROXY=1 PYTHONPATH="$project_dir/decky/py_modules" python3 -B -m unittest \
   "$project_dir/decky/tests/e2e/test_toxiproxy.py" -v

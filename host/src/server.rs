@@ -453,14 +453,14 @@ fn protocol_mismatch() -> Response {
     error(
         StatusCode::UPGRADE_REQUIRED,
         ErrorCode::ProtocolMismatch,
-        "DeckyPowerHost and the Decky plugin use incompatible protocol versions.",
+        "DeckyMyRigHost and the Decky plugin use incompatible protocol versions.",
     )
 }
 fn authenticated_protocol_mismatch(authentication: &AuthenticationContext, path: &str) -> Response {
     authenticated_error(
         StatusCode::UPGRADE_REQUIRED,
         ErrorCode::ProtocolMismatch,
-        "DeckyPowerHost and the Decky plugin use incompatible protocol versions.",
+        "DeckyMyRigHost and the Decky plugin use incompatible protocol versions.",
         authentication,
         path,
     )
@@ -708,7 +708,7 @@ mod tests {
         let started = PairResponse::decode(start_bytes).unwrap();
         let shared = client.finish(&started.host_spake2_message).unwrap();
         let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&shared).unwrap();
-        confirmation.update(b"deckypower-pairing-confirm-v1\0");
+        confirmation.update(b"deckymyrig-pairing-confirm-v1\0");
         confirmation.update(&client_message);
         confirmation.update(&started.host_spake2_message);
         confirmation.update(&started.session_id);
@@ -958,8 +958,8 @@ mod tests {
 
     #[tokio::test]
     async fn real_tcp_pair_status_and_mock_shutdown_flow() {
-        const CONFIRMATION_DOMAIN: &[u8] = b"deckypower-pairing-confirm-v1\0";
-        const CREDENTIAL_INFO: &[u8] = b"deckypower-pairing-credential-v1";
+        const CONFIRMATION_DOMAIN: &[u8] = b"deckymyrig-pairing-confirm-v1\0";
+        const CREDENTIAL_INFO: &[u8] = b"deckymyrig-pairing-credential-v1";
         let path = tempdir().unwrap().keep().join("identity.json");
         let power = Arc::new(MockPowerController::default());
         let state = Arc::new(AppState {

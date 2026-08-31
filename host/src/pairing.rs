@@ -22,9 +22,9 @@ const MAX_PENDING_SESSIONS_PER_SOURCE: usize = 8;
 const MAX_FAILURE_SOURCES: usize = 256;
 const CLIENT_ID: &[u8] = b"decky-client";
 const HOST_ID: &[u8] = b"decky-host";
-const CREDENTIAL_INFO: &[u8] = b"deckypower-pairing-credential-v1";
-const CONFIRMATION_DOMAIN: &[u8] = b"deckypower-pairing-confirm-v1\0";
-const CREDENTIAL_AAD_DOMAIN: &[u8] = b"deckypower-pairing-credential-aad-v1\0";
+const CREDENTIAL_INFO: &[u8] = b"deckymyrig-pairing-credential-v1";
+const CONFIRMATION_DOMAIN: &[u8] = b"deckymyrig-pairing-confirm-v1\0";
+const CREDENTIAL_AAD_DOMAIN: &[u8] = b"deckymyrig-pairing-credential-aad-v1\0";
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum PairingError {

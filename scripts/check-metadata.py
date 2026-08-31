@@ -23,7 +23,7 @@ def main() -> int:
     cargo = tomllib.loads((PROJECT / "host/Cargo.toml").read_text("utf-8"))
     host_version = cargo["package"]["version"]
     package_version = json.loads((PROJECT / "decky/package.json").read_text("utf-8"))["version"]
-    installer_version = require(r'^#define AppVersion "([^"]+)"', PROJECT / "host/installer/DeckyPowerHost.iss", "installer version")
+    installer_version = require(r'^#define AppVersion "([^"]+)"', PROJECT / "host/installer/DeckyMyRigHost.iss", "installer version")
     if len({host_version, package_version, installer_version}) != 1:
         raise RuntimeError(
             f"Release versions differ: Cargo={host_version}, npm={package_version}, installer={installer_version}"
@@ -31,7 +31,7 @@ def main() -> int:
 
     python_plugin_version = require(
         r'^PLUGIN_VERSION = "([^"]+)"$',
-        PROJECT / "decky/py_modules/decky_power/protobuf.py",
+        PROJECT / "decky/py_modules/decky_my_rig/protobuf.py",
         "Python plugin version",
     )
     if python_plugin_version != package_version:
@@ -40,7 +40,7 @@ def main() -> int:
         )
 
     rust_protocol = require(r"^pub const PROTOCOL_VERSION: u32 = (\d+);", PROJECT / "host/src/lib.rs", "Rust protocol version")
-    python_protocol = require(r"^PROTOCOL_VERSION = (\d+)$", PROJECT / "decky/py_modules/decky_power/protobuf.py", "Python protocol version")
+    python_protocol = require(r"^PROTOCOL_VERSION = (\d+)$", PROJECT / "decky/py_modules/decky_my_rig/protobuf.py", "Python protocol version")
     if rust_protocol != python_protocol:
         raise RuntimeError(f"Protocol versions differ: Rust={rust_protocol}, Python={python_protocol}")
 

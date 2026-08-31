@@ -1,9 +1,9 @@
 import asyncio
 import argparse
 
-from decky_power.client import HostClient
-from decky_power.models import Device
-from decky_power.protobuf import PROTOCOL_VERSION
+from decky_my_rig.client import HostClient
+from decky_my_rig.models import Device
+from decky_my_rig.protobuf import PROTOCOL_VERSION
 
 
 async def main(code: str, port: int) -> None:

@@ -9,7 +9,7 @@ if [[ -z "$toxiproxy_server" || ! -x "$toxiproxy_server" ]]; then
   exit 2
 fi
 
-temporary_dir="$(mktemp -d -t decky-power-toxiproxy-XXXXXX)"
+temporary_dir="$(mktemp -d -t decky-my-rig-toxiproxy-XXXXXX)"
 host_pid=""
 proxy_pid=""
 cleanup() {
@@ -19,12 +19,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-printf 'port = 58201\n' > "$temporary_dir/DeckyPowerHost.toml"
+printf 'port = 58201\n' > "$temporary_dir/DeckyMyRigHost.toml"
 printf '[{"name":"host-slow","listen":"127.0.0.1:58200","upstream":"127.0.0.1:58201","enabled":true}]\n' > "$temporary_dir/toxiproxy.json"
 
 cargo build --quiet --manifest-path "$project_dir/host/Cargo.toml"
-"$project_dir/host/target/debug/decky-power-host" \
-  --dev --mock-shutdown --config "$temporary_dir/DeckyPowerHost.toml" \
+"$project_dir/host/target/debug/decky-my-rig-host" \
+  --dev --mock-shutdown --config "$temporary_dir/DeckyMyRigHost.toml" \
   --pairing-code-value 333333 > "$temporary_dir/host.log" 2>&1 &
 host_pid=$!
 "$toxiproxy_server" -host 127.0.0.1 -port 58474 \
@@ -41,7 +41,7 @@ for _ in {1..50}; do
 done
 curl --fail --silent http://127.0.0.1:58474/proxies >/dev/null
 
-DECKY_POWER_TOXIPROXY=1 PYTHONPATH="$project_dir/decky/py_modules" \
+DECKY_MY_RIG_TOXIPROXY=1 PYTHONPATH="$project_dir/decky/py_modules" \
   python3 -W error::ResourceWarning -B -m unittest \
   "$project_dir/decky/tests/e2e/test_toxiproxy.py" -v
 echo "Standalone official Toxiproxy network-fault E2E: PASS"

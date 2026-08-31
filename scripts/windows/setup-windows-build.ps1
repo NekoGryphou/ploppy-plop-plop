@@ -72,4 +72,4 @@ if ($LASTEXITCODE -ne 0) { throw "Rust stable toolchain installation failed." }
 & rustup.exe target add x86_64-pc-windows-msvc
 if ($LASTEXITCODE -ne 0) { throw "The Windows MSVC Rust target installation failed." }
 
-Write-Host "Windows build tools are ready. DeckyPowerHost was not installed, and no service or firewall rule was changed."
+Write-Host "Windows build tools are ready. DeckyMyRigHost was not installed, and no service or firewall rule was changed."

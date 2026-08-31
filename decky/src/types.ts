@@ -7,7 +7,7 @@
 * @property address - Hostname or IP address.
 * @property mac - Normalized Wake-on-LAN address.
 * @property mac_overridden - Whether the user supplied the MAC manually.
-* @property port - Per-device DeckyPowerHost port.
+* @property port - Per-device DeckyMyRigHost port.
 * @property broadcast_address - Optional IPv4 Wake-on-LAN broadcast address.
 * @property host_id - Optional paired host identity.
 * @property host_version - Optional reported host version.

@@ -9,8 +9,8 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 use tokio::sync::Mutex;
 
-const DOMAIN: &[u8] = b"deckypower-auth-v1\0";
-const RESPONSE_DOMAIN: &[u8] = b"deckypower-response-v1\0";
+const DOMAIN: &[u8] = b"deckymyrig-auth-v1\0";
+const RESPONSE_DOMAIN: &[u8] = b"deckymyrig-response-v1\0";
 pub const CLOCK_WINDOW: Duration = Duration::from_secs(60);
 pub const NONCE_LENGTH: usize = 16;
 

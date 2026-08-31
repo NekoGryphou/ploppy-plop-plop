@@ -1,6 +1,6 @@
 import unittest
 
-from decky_power.versioning import VersionRelation, compare_versions
+from decky_my_rig.versioning import VersionRelation, compare_versions
 
 
 class VersioningTests(unittest.TestCase):

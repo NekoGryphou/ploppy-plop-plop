@@ -8,10 +8,10 @@ decky/coverage/
 out/
 decky/src/dev/
 host/target/
-tools/decky-power-test/target/
+tools/decky-my-rig-test/target/
 host/control/**/bin/
 host/control/**/obj/
-host/DeckyPowerHost.dev-state.json
+host/DeckyMyRigHost.dev-state.json
 decky/py_modules/cryptography/
 decky/py_modules/spake2/
 decky/py_modules/cffi/

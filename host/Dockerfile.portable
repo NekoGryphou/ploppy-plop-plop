@@ -5,5 +5,5 @@ COPY host /source/host
 RUN cargo build --manifest-path /source/host/Cargo.toml --release
 
 FROM debian:bookworm-slim
-COPY --from=build /source/host/target/release/decky-power-host /usr/local/bin/decky-power-host
-ENTRYPOINT ["decky-power-host"]
+COPY --from=build /source/host/target/release/decky-my-rig-host /usr/local/bin/decky-my-rig-host
+ENTRYPOINT ["decky-my-rig-host"]

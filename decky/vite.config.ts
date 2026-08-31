@@ -21,12 +21,12 @@ function deckyManifestPlugin(): Plugin {
 export default defineConfig({
   plugins: [deckyManifestPlugin(), react()],
   build: {
-    lib: { entry: resolve(process.cwd(), "src/index.tsx"), name: "RemotePCPower", formats: ["iife"], fileName: () => "index.js" },
+    lib: { entry: resolve(process.cwd(), "src/index.tsx"), name: "DeckyMyRig", formats: ["iife"], fileName: () => "index.js" },
     target: "es2020",
     minify: false,
     rollupOptions: {
       external: ["react", "react-dom", "react/jsx-runtime", "@decky/ui"],
-      output: { footer: "export default RemotePCPower;", globals: { react: "SP_REACT", "react-dom": "SP_REACTDOM", "react/jsx-runtime": "SP_JSX", "@decky/ui": "DFL" } }
+      output: { footer: "export default DeckyMyRig;", globals: { react: "SP_REACT", "react-dom": "SP_REACTDOM", "react/jsx-runtime": "SP_JSX", "@decky/ui": "DFL" } }
     }
   },
   test: { environment: "jsdom", setupFiles: ["src/test/setup.ts"], include: ["src/**/*.test.ts", "src/**/*.test.tsx"] }

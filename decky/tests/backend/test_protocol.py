@@ -5,10 +5,10 @@ import unittest
 from urllib.error import HTTPError
 from unittest.mock import AsyncMock, patch
 
-from decky_power.auth import AuthHeaders, canonical_message, response_signature, sign, verify_response
-from decky_power.client import HostClient, HostError, HostReply
-from decky_power.models import Device
-from decky_power.protobuf import (
+from decky_my_rig.auth import AuthHeaders, canonical_message, response_signature, sign, verify_response
+from decky_my_rig.client import HostClient, HostError, HostReply
+from decky_my_rig.models import Device
+from decky_my_rig.protobuf import (
     PLUGIN_VERSION,
     DecodeError,
     ErrorResponse,
@@ -21,7 +21,7 @@ from decky_power.protobuf import (
     text,
     uint,
 )
-from decky_power.wol import magic_packet, send_magic_packet
+from decky_my_rig.wol import magic_packet, send_magic_packet
 
 
 class ProtocolTests(unittest.TestCase):
@@ -84,7 +84,7 @@ class ProtocolTests(unittest.TestCase):
         changed_body = sign(secret, "POST", "/v1/status", b"changed", timestamp=100, nonce=nonce)
         self.assertNotEqual(valid.signature, changed_path.signature)
         self.assertNotEqual(valid.signature, changed_body.signature)
-        self.assertTrue(canonical_message(100, nonce, "post", "/v1/status", b"").startswith(b"deckypower-auth-v1\0"))
+        self.assertTrue(canonical_message(100, nonce, "post", "/v1/status", b"").startswith(b"deckymyrig-auth-v1\0"))
 
     def test_response_authentication_rejects_missing_and_tampered_data(self) -> None:
         secret, nonce = bytes(range(32)), bytes(range(16))
@@ -102,7 +102,7 @@ class ProtocolTests(unittest.TestCase):
     def test_host_client_rejects_unsigned_authenticated_response(self) -> None:
         client = HostClient()
         device = Device(id="pc", name="PC", address="127.0.0.1", mac="AA:BB:CC:DD:EE:FF")
-        with patch("decky_power.client.asyncio.to_thread", new=AsyncMock(return_value=HostReply(b"", 200, None))):
+        with patch("decky_my_rig.client.asyncio.to_thread", new=AsyncMock(return_value=HostReply(b"", 200, None))):
             with self.assertRaises(HostError):
                 asyncio.run(client._post(device, "/v1/status", b"request", bytes(range(32))))
 
@@ -144,14 +144,14 @@ class ProtocolTests(unittest.TestCase):
             headers = {} if signature is None else {"X-Decky-Response-Signature": signature}
             return HTTPError("http://host/v1/status", 426, "Upgrade Required", headers, io.BytesIO(body))
 
-        with patch("decky_power.client.sign", return_value=AuthHeaders(100, nonce, b"x" * 32)):
-            with patch("decky_power.client.asyncio.to_thread", new=AsyncMock(side_effect=failure(None))):
+        with patch("decky_my_rig.client.sign", return_value=AuthHeaders(100, nonce, b"x" * 32)):
+            with patch("decky_my_rig.client.asyncio.to_thread", new=AsyncMock(side_effect=failure(None))):
                 with self.assertRaises(HostError) as unsigned:
                     asyncio.run(client._post(device, "/v1/status", b"request", secret))
             self.assertEqual(unsigned.exception.kind, "integrity")
 
             signature = response_signature(secret, nonce, "/v1/status", 426, body).hex()
-            with patch("decky_power.client.asyncio.to_thread", new=AsyncMock(side_effect=failure(signature))):
+            with patch("decky_my_rig.client.asyncio.to_thread", new=AsyncMock(side_effect=failure(signature))):
                 with self.assertRaises(HostError) as authenticated:
                     asyncio.run(client._post(device, "/v1/status", b"request", secret))
             self.assertEqual((authenticated.exception.kind, authenticated.exception.status), ("protocol", 426))
@@ -166,7 +166,7 @@ class ProtocolTests(unittest.TestCase):
         connection = unittest.mock.MagicMock()
         context = unittest.mock.MagicMock()
         context.__enter__.return_value = connection
-        with patch("decky_power.wol.socket.socket", return_value=context):
+        with patch("decky_my_rig.wol.socket.socket", return_value=context):
             send_magic_packet("AA:BB:CC:DD:EE:FF", "192.168.1.255")
         packet = b"\xff" * 6 + bytes.fromhex("AABBCCDDEEFF") * 16
         connection.setsockopt.assert_called_once()

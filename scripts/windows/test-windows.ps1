@@ -17,7 +17,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "cargo Windows target check failed." }
 } finally { Pop-Location }
 
-dotnet test (Join-Path $ProjectDirectory "host\control\DeckyPowerHostControl.Core.Tests\DeckyPowerHostControl.Core.Tests.csproj") -c Release
+dotnet test (Join-Path $ProjectDirectory "host\control\DeckyMyRigHostControl.Core.Tests\DeckyMyRigHostControl.Core.Tests.csproj") -c Release
 if ($LASTEXITCODE -ne 0) { throw "Windows control-model tests failed." }
-& (Join-Path $PSScriptRoot "test-windows-host-e2e.ps1")
+& (Join-Path $PSScriptRoot "test-decky-my-rig-host-e2e.ps1")
 Write-Host "Safe Windows automated tests: PASS (no service installation, firewall modification, or shutdown was performed)."

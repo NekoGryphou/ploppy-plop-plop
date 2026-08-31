@@ -19,13 +19,13 @@ jobs:
       - run: npm --prefix decky test
       - run: npm --prefix decky run build
       - run: ./scripts/decky/build-plugin.sh
-      - run: npm --prefix decky sbom --package-lock-only --sbom-format cyclonedx > out/plugin/plugin.cdx.json
+      - run: npm --prefix decky sbom --package-lock-only --sbom-format cyclonedx > out/plugin/DekyMyRig_Plugin.cdx.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: release-plugin
+          name: DekyMyRig_Plugin
           path: |
-            out/plugin/RemotePCPower.zip
-            out/plugin/plugin.cdx.json
+            out/plugin/DekyMyRig_Plugin.zip
+            out/plugin/DekyMyRig_Plugin.cdx.json
 
   windows:
     runs-on: windows-latest
@@ -63,10 +63,10 @@ jobs:
       - run: cargo cyclonedx --manifest-path host/Cargo.toml --format json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: release-windows
+          name: DeckyMyRig_Host__Windows_x64
           path: |
-            out/host/DeckyPowerHost-Setup.exe
-            host/decky-power-host.cdx.json
+            out/host/DeckyMyRig_Host__Windows_x64.exe
+            host/decky-my-rig-host.cdx.json
 
   publish:
     needs: [plugin, windows]
@@ -79,7 +79,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          pattern: release-*
+          pattern: "*MyRig_*"
           path: release
           merge-multiple: true
       - name: Verify tag and build release manifest
@@ -91,8 +91,8 @@ jobs:
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
-            release/DeckyPowerHost-Setup.exe
-            release/RemotePCPower.zip
+            release/DeckyMyRig_Host__Windows_x64.exe
+            release/DekyMyRig_Plugin.zip
             release/release-manifest.json
       - name: Publish immutable release assets
         env:

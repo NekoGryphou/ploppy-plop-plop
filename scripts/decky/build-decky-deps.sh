@@ -4,7 +4,7 @@ set -euo pipefail
 project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 requirements="$project_dir/decky/backend/requirements.txt"
 target="$project_dir/decky/py_modules"
-staging="$(mktemp -d -t decky-power-python-deps-XXXXXX)"
+staging="$(mktemp -d -t decky-my-rig-python-deps-XXXXXX)"
 trap 'rm -rf -- "$staging"' EXIT
 
 python3 -m pip --version >/dev/null 2>&1 || {

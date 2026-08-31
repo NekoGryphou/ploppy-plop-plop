@@ -10,18 +10,18 @@ cleanup() {
 }
 trap cleanup EXIT
 
-printf 'port = 47991\n' > "$test_dir/DeckyPowerHost.toml"
+printf 'port = 47991\n' > "$test_dir/DeckyMyRigHost.toml"
 
 cargo run --manifest-path "$project_dir/host/Cargo.toml" -- \
   --dev --mock-shutdown \
   --ephemeral-port \
-  --config "$test_dir/DeckyPowerHost.toml" \
+  --config "$test_dir/DeckyMyRigHost.toml" \
   --pairing-code-value 483921 > "$test_dir/host.log" 2>&1 &
 host_pid="$!"
 
 port=""
 for _ in {1..50}; do
-  port="$(sed -n 's/^DECKY_POWER_LISTEN_PORT=//p' "$test_dir/host.log" | tail -1)"
+  port="$(sed -n 's/^DECKY_MY_RIG_LISTEN_PORT=//p' "$test_dir/host.log" | tail -1)"
   if [[ -n "$port" ]] && bash -c "exec 3<>/dev/tcp/127.0.0.1/$port" 2>/dev/null; then break; fi
   if ! kill -0 "$host_pid" 2>/dev/null; then
     cat "$test_dir/host.log" >&2
@@ -31,7 +31,7 @@ for _ in {1..50}; do
 done
 [[ -n "$port" ]] || { cat "$test_dir/host.log" >&2; exit 1; }
 
-client=(cargo run --quiet --manifest-path "$project_dir/tools/decky-power-test/Cargo.toml" --)
+client=(cargo run --quiet --manifest-path "$project_dir/tools/decky-my-rig-test/Cargo.toml" --)
 credential="$test_dir/credential.json"
 "${client[@]}" pair --host 127.0.0.1 --port "$port" --code "483 921" --credential-file "$credential"
 "${client[@]}" status --host 127.0.0.1 --port "$port" --credential-file "$credential"

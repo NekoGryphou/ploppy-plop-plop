@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from decky_power.discovery import DiscoveryError, _find_proc_arp, discover_mac, find_mac
+from decky_my_rig.discovery import DiscoveryError, _find_proc_arp, discover_mac, find_mac
 
 
 class DiscoveryTests(unittest.TestCase):
@@ -32,11 +32,11 @@ class DiscoveryTests(unittest.TestCase):
         process.communicate = AsyncMock()
         process.wait = AsyncMock()
         with (
-            patch("decky_power.discovery._resolve_ipv4", new=AsyncMock(return_value="192.168.1.42")),
-            patch("decky_power.discovery._prime_neighbor", new=AsyncMock()),
-            patch("decky_power.discovery._find_proc_arp", return_value=""),
-            patch("decky_power.discovery.asyncio.create_subprocess_exec", new=AsyncMock(return_value=process)),
-            patch("decky_power.discovery.asyncio.wait_for", new=timeout),
+            patch("decky_my_rig.discovery._resolve_ipv4", new=AsyncMock(return_value="192.168.1.42")),
+            patch("decky_my_rig.discovery._prime_neighbor", new=AsyncMock()),
+            patch("decky_my_rig.discovery._find_proc_arp", return_value=""),
+            patch("decky_my_rig.discovery.asyncio.create_subprocess_exec", new=AsyncMock(return_value=process)),
+            patch("decky_my_rig.discovery.asyncio.wait_for", new=timeout),
         ):
             with self.assertRaises(DiscoveryError):
                 asyncio.run(discover_mac("pc.local", 47991))

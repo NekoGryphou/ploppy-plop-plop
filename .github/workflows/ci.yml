@@ -24,8 +24,8 @@ jobs:
       - run: REQUIRE_DOCKER=1 ./scripts/check.sh
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: RemotePCPower
-          path: out/plugin/RemotePCPower.zip
+          name: DekyMyRig_Plugin
+          path: out/plugin/DekyMyRig_Plugin.zip
 
   windows-host:
     runs-on: windows-latest
@@ -46,8 +46,8 @@ jobs:
         run: ./scripts/windows/test-windows.ps1
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: DeckyPowerHost-Windows
+          name: DeckyMyRig_Host__Windows_x64
           path: |
-            out/host/DeckyPowerHost.exe
-            out/host/DeckyPowerHost-Setup.exe
+            out/host/DeckyMyRigHost.exe
+            out/host/DeckyMyRig_Host__Windows_x64.exe
             out/control/**

@@ -4,7 +4,7 @@ test("captures Quick Access and Add PC states", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Gaming PC")).toBeVisible();
   await expect(page.getByText("Host port")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Back to Remote PCs" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Back to PCs" })).toBeVisible();
   const nameInput = page.getByLabel("Name");
   const nameLabel = page.getByText("Name", { exact: true });
   const [inputBox, labelBox, panelBox] = await Promise.all([

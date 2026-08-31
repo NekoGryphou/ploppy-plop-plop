@@ -9,7 +9,7 @@ command -v cargo-audit >/dev/null 2>&1 || {
   exit 1
 }
 cargo audit --file "$project_dir/host/Cargo.lock"
-cargo audit --file "$project_dir/tools/decky-power-test/Cargo.lock"
+cargo audit --file "$project_dir/tools/decky-my-rig-test/Cargo.lock"
 npm --prefix "$project_dir/decky" audit --audit-level=low
 
 pip_audit_args=(--requirement "$requirements" --no-deps --disable-pip --strict)

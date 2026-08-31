@@ -8,10 +8,10 @@ import unittest
 from pathlib import Path
 from typing import TextIO
 
-from decky_power.client import HostClient, HostError
-from decky_power.controller import Controller
-from decky_power.models import DeviceState
-from decky_power.store import Store
+from decky_my_rig.client import HostClient, HostError
+from decky_my_rig.controller import Controller
+from decky_my_rig.models import DeviceState
+from decky_my_rig.store import Store
 
 
 class LifecycleE2ETests(unittest.IsolatedAsyncioTestCase):
@@ -30,9 +30,9 @@ class LifecycleE2ETests(unittest.IsolatedAsyncioTestCase):
         self.temporary.cleanup()
 
     async def start_host(self, code: str | None = "483921") -> int:
-        config = self.directory / "DeckyPowerHost.toml"
+        config = self.directory / "DeckyMyRigHost.toml"
         config.write_text("port = 47991\n", "utf-8")
-        executable = Path(__file__).parents[3] / "host" / "target" / "debug" / "decky-power-host"
+        executable = Path(__file__).parents[3] / "host" / "target" / "debug" / "decky-my-rig-host"
         arguments = [str(executable), "--dev", "--mock-shutdown", "--ephemeral-port", "--config", str(config)]
         if code is not None:
             arguments.extend(["--pairing-code-value", code])
@@ -47,7 +47,7 @@ class LifecycleE2ETests(unittest.IsolatedAsyncioTestCase):
             self.host_log_file.flush()
             output = self.host_log_path.read_text("utf-8")
             for line in output.splitlines():
-                if line.startswith("DECKY_POWER_LISTEN_PORT="):
+                if line.startswith("DECKY_MY_RIG_LISTEN_PORT="):
                     return int(line.split("=", 1)[1])
             if self.host_process.poll() is not None:
                 self.fail(f"portable host exited early: {output}")

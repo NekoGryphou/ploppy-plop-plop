@@ -14,7 +14,7 @@ The repository contained:
   Protobuf encoding, pairing, and request authentication;
 - a Rust Axum host with config, pairing/authentication, Windows service support,
   shutdown integration, and an Inno Setup installer;
-- one shared schema at `proto/decky_power.proto`;
+- one shared schema at `proto/decky_my_rig.proto`;
 - a browser mockup used for visual inspection.
 
 It did not contain a WinUI 3 control application, a local service-management
@@ -131,7 +131,7 @@ final local gate required Docker and executed all five real network-fault cases:
 ## Native Windows VM evidence (2026-08-30)
 
 The following was actually executed in the dedicated
-`DeckyPower-Test-Windows` Hyper-V VM, not inferred from compilation:
+`DeckyMyRig-Test-Windows` Hyper-V VM, not inferred from compilation:
 
 - native Windows Rust host tests: 28 passed, 0 failed;
 - C# control-model tests: 6 passed, 0 failed;

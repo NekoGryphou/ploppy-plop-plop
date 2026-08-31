@@ -19,7 +19,7 @@ export function PairDeviceForm({ device, onPaired, onCancel }: { device: Device;
   const pair = async (): Promise<void> => {
     const normalized = code.replace(/\s/g, "");
     if (!/^\d{6}$/.test(normalized)) {
-      setMessage("Enter the six-digit code shown by DeckyPowerHostControl.");
+      setMessage("Enter the six-digit code shown by DeckyMyRigHostControl.");
       return;
     }
     setBusy(true);
@@ -38,7 +38,7 @@ export function PairDeviceForm({ device, onPaired, onCancel }: { device: Device;
   };
 
   return <div>
-    <p>Open DeckyPowerHostControl on {device.name} and generate a pairing code.</p>
+    <p>Open DeckyMyRigHostControl on {device.name} and generate a pairing code.</p>
     <Field label="Pairing code" childrenContainerWidth="max" bottomSeparator="none" padding="compact">
       <TextField style={{ width: "100%" }} value={code} onChange={(event) => setCode(event.target.value)} disabled={busy} inputMode="numeric"/>
     </Field>

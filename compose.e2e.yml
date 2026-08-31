@@ -3,8 +3,8 @@ services:
     build:
       context: .
       dockerfile: host/Dockerfile.portable
-    command: ["--dev", "--mock-shutdown", "--config", "/config/DeckyPowerHost.toml", "--pairing-code-value", "111111"]
-    volumes: ["./scripts/network/fixtures/host-a.toml:/config/DeckyPowerHost.toml:ro"]
+    command: ["--dev", "--mock-shutdown", "--config", "/config/DeckyMyRigHost.toml", "--pairing-code-value", "111111"]
+    volumes: ["./scripts/network/fixtures/host-a.toml:/config/DeckyMyRigHost.toml:ro"]
     # Keep the published test port outside commonly reserved host ranges.
     ports: ["127.0.0.1:58991:47991"]
 
@@ -12,16 +12,16 @@ services:
     build:
       context: .
       dockerfile: host/Dockerfile.portable
-    command: ["--dev", "--mock-shutdown", "--config", "/config/DeckyPowerHost.toml", "--pairing-code-value", "222222"]
-    volumes: ["./scripts/network/fixtures/host-b.toml:/config/DeckyPowerHost.toml:ro"]
+    command: ["--dev", "--mock-shutdown", "--config", "/config/DeckyMyRigHost.toml", "--pairing-code-value", "222222"]
+    volumes: ["./scripts/network/fixtures/host-b.toml:/config/DeckyMyRigHost.toml:ro"]
     ports: ["127.0.0.1:58100:48100"]
 
   host-c:
     build:
       context: .
       dockerfile: host/Dockerfile.portable
-    command: ["--dev", "--mock-shutdown", "--config", "/config/DeckyPowerHost.toml", "--pairing-code-value", "333333"]
-    volumes: ["./scripts/network/fixtures/host-c.toml:/config/DeckyPowerHost.toml:ro"]
+    command: ["--dev", "--mock-shutdown", "--config", "/config/DeckyMyRigHost.toml", "--pairing-code-value", "333333"]
+    volumes: ["./scripts/network/fixtures/host-c.toml:/config/DeckyMyRigHost.toml:ro"]
     ports: ["127.0.0.1:58201:48200"]
 
   toxiproxy:

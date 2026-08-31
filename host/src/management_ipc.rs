@@ -27,7 +27,7 @@ use windows::{
 
 use crate::{management, server::AppState};
 
-pub const PIPE_NAME: &str = r"\\.\pipe\DeckyPowerHostControl";
+pub const PIPE_NAME: &str = r"\\.\pipe\DeckyMyRigHostControl";
 const PIPE_SDDL: windows::core::PCWSTR = w!("D:P(A;;GA;;;SY)(A;;GA;;;BA)");
 
 #[derive(Deserialize)]
@@ -120,7 +120,7 @@ fn create_pipe(first: bool) -> std::io::Result<NamedPipeServer> {
     }
     let handle = unsafe {
         CreateNamedPipeW(
-            w!(r"\\.\pipe\DeckyPowerHostControl"),
+            w!(r"\\.\pipe\DeckyMyRigHostControl"),
             open_mode,
             PIPE_TYPE_BYTE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
             PIPE_UNLIMITED_INSTANCES,

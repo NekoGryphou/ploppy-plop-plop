@@ -1,5 +1,5 @@
 {
-  "name": "decky-remote-pc-power",
+  "name": "decky-my-rig",
   "version": "0.1.0",
   "description": "Start and shut down Windows gaming PCs from Decky.",
   "type": "module",
@@ -11,7 +11,7 @@
     "test": "vitest run && npm run test:backend && npm run test:integration",
     "test:frontend": "vitest run",
     "test:backend": "PYTHONPATH=py_modules python3 -B -m unittest discover -s tests/backend -v",
-    "test:integration": "../scripts/decky/test-decky-host-integration.sh",
+    "test:integration": "../scripts/decky/test-decky-my-rig-host-integration.sh",
     "visual": "playwright test --config mockup/playwright.config.ts",
     "visual:serve": "vite --config mockup/vite.config.ts",
     "zip": "../scripts/decky/build-plugin.sh",
