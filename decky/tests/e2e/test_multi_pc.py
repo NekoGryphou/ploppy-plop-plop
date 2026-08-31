@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import socket
-import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -29,54 +28,72 @@ class DelayedTcpProxy:
             await self.server.wait_closed()
 
     async def _handle(self, client_reader: asyncio.StreamReader, client_writer: asyncio.StreamWriter) -> None:
+        host_writer: asyncio.StreamWriter | None = None
         try:
             host_reader, host_writer = await asyncio.open_connection("127.0.0.1", self.upstream_port)
             request = await client_reader.read(64 * 1024)
             host_writer.write(request)
             await host_writer.drain()
-            response = await host_reader.read(64 * 1024)
+            headers = await host_reader.readuntil(b"\r\n\r\n")
+            content_length = 0
+            for header in headers.decode("ascii").split("\r\n"):
+                if header.lower().startswith("content-length:"):
+                    content_length = int(header.split(":", 1)[1].strip())
+                    break
+            response = headers + await host_reader.readexactly(content_length)
             await asyncio.sleep(self.response_delay)
             client_writer.write(response)
             await client_writer.drain()
-            host_writer.close()
-            await host_writer.wait_closed()
         finally:
+            if host_writer is not None:
+                host_writer.close()
             client_writer.close()
-            await client_writer.wait_closed()
 
 
 class MultiPcE2ETests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.directory = Path(self.temporary.name)
-        self.processes: list[subprocess.Popen[str]] = []
+        self.processes: list[asyncio.subprocess.Process] = []
         self.proxies: list[DelayedTcpProxy] = []
 
     async def asyncTearDown(self) -> None:
         for proxy in self.proxies: await proxy.close()
         for process in self.processes:
+            if process.returncode is not None:
+                continue
             process.terminate()
-            try: await asyncio.wait_for(asyncio.to_thread(process.wait), timeout=2)
+            try: await asyncio.wait_for(process.wait(), timeout=2)
             except TimeoutError:
                 process.kill()
-                await asyncio.to_thread(process.wait)
-            if process.stdout is not None: process.stdout.close()
+                await process.wait()
         self.temporary.cleanup()
 
     async def start_host(self, name: str, code: str) -> int:
-        config = self.directory / f"{name}.toml"
+        # Each process represents a different PC. Keep its configuration and
+        # identity state in a separate directory, just as they would be on
+        # separate machines; otherwise every process resolves the same
+        # DeckyMyRigHost.dev-state.json sibling and races while starting.
+        host_directory = self.directory / name
+        host_directory.mkdir()
+        config = host_directory / "DeckyMyRigHost.toml"
         config.write_text("port = 47991\n", "utf-8")
         executable = Path(__file__).parents[3] / "host" / "target" / "debug" / "decky-my-rig-host"
-        process = subprocess.Popen(
-            [str(executable), "--dev", "--mock-shutdown", "--ephemeral-port", "--config", str(config), "--pairing-code-value", code],
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+        process = await asyncio.create_subprocess_exec(
+            str(executable), "--dev", "--mock-shutdown", "--ephemeral-port",
+            "--config", str(config), "--pairing-code-value", code,
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
         )
         self.processes.append(process)
         assert process.stdout is not None
+        output: list[str] = []
         for _ in range(50):
-            line = await asyncio.wait_for(asyncio.to_thread(process.stdout.readline), timeout=2)
+            line = (await asyncio.wait_for(process.stdout.readline(), timeout=2)).decode("utf-8")
+            output.append(line.rstrip())
             if line.startswith("DECKY_MY_RIG_LISTEN_PORT="): return int(line.split("=", 1)[1])
-            if process.poll() is not None: self.fail(f"{name} exited early: {line}")
+            if not line or process.returncode is not None:
+                await process.wait()
+                self.fail(f"{name} exited early ({process.returncode}): {' | '.join(output)}")
         self.fail(f"{name} did not report a port")
 
     @staticmethod
