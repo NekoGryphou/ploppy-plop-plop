@@ -1,6 +1,6 @@
 use std::{fs, io, path::PathBuf};
 
-use rand::Rng;
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

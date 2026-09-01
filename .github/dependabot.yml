@@ -14,6 +14,8 @@ updates:
     directory: /decky
     schedule: { interval: monthly }
     open-pull-requests-limit: 1
+    ignore:
+      - dependency-name: typescript
     groups: { plugin-dependencies: { patterns: ["*"] } }
   - package-ecosystem: pip
     directory: /decky/backend

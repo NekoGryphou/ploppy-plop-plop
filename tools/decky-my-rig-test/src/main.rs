@@ -20,7 +20,7 @@ use decky_my_rig_host::{
     },
 };
 use hkdf::Hkdf;
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, KeyInit as HmacKeyInit, Mac};
 use prost::Message;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
@@ -154,7 +154,7 @@ async fn pair(options: &Options) -> Result<(), String> {
     let shared = client
         .finish(&started.host_spake2_message)
         .map_err(|_| "pairing exchange failed".to_owned())?;
-    let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&shared)
+    let mut confirmation = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&shared)
         .map_err(|_| "pairing confirmation failed".to_owned())?;
     confirmation.update(CONFIRMATION_DOMAIN);
     confirmation.update(&client_message);
@@ -180,7 +180,8 @@ async fn pair(options: &Options) -> Result<(), String> {
         .map_err(|_| "credential derivation failed".to_owned())?;
     let credential = ChaCha20Poly1305::new((&key).into())
         .decrypt(
-            Nonce::from_slice(&paired.encryption_nonce),
+            &Nonce::try_from(paired.encryption_nonce.as_slice())
+                .map_err(|_| "invalid encryption nonce".to_owned())?,
             Payload {
                 msg: &paired.encrypted_credential,
                 aad: &credential_aad(

@@ -9,8 +9,8 @@ use chacha20poly1305::{
     aead::{Aead, Payload},
 };
 use hkdf::Hkdf;
-use hmac::{Hmac, Mac};
-use rand::{Rng, RngCore};
+use hmac::{Hmac, KeyInit as HmacKeyInit, Mac};
+use rand::{Rng, RngExt};
 use sha2::Sha256;
 use spake2::{Ed25519Group, Identity, Password, Spake2};
 use thiserror::Error;
@@ -227,7 +227,7 @@ impl PairingCode {
         if pending.created.elapsed() > PAIRING_LIFETIME {
             return Err(PairingError::Invalid);
         }
-        let mut mac = <Hmac<Sha256> as Mac>::new_from_slice(&pending.shared)
+        let mut mac = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&pending.shared)
             .map_err(|_| PairingError::Invalid)?;
         mac.update(CONFIRMATION_DOMAIN);
         mac.update(&pending.client_message);
@@ -255,7 +255,7 @@ impl PairingCode {
         let aad = credential_aad(&pending.host_message, &pending.session_id, context)?;
         let encrypted_credential = ChaCha20Poly1305::new((&key).into())
             .encrypt(
-                Nonce::from_slice(&nonce),
+                &Nonce::try_from(nonce.as_slice()).map_err(|_| PairingError::Encryption)?,
                 Payload {
                     msg: &credential,
                     aad: &aad,
@@ -328,7 +328,7 @@ mod tests {
         );
         let started = pairing.start(&message).unwrap();
         let shared = client.finish(&started.host_message).unwrap();
-        let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&shared).unwrap();
+        let mut confirmation = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&shared).unwrap();
         confirmation.update(CONFIRMATION_DOMAIN);
         confirmation.update(&message);
         confirmation.update(&started.host_message);
@@ -366,7 +366,7 @@ mod tests {
         .unwrap();
         let decrypted = ChaCha20Poly1305::new((&key).into())
             .decrypt(
-                Nonce::from_slice(&result.nonce),
+                &Nonce::try_from(result.nonce.as_slice()).unwrap(),
                 Payload {
                     msg: &result.encrypted_credential,
                     aad: &aad,
@@ -389,7 +389,7 @@ mod tests {
         assert!(
             ChaCha20Poly1305::new((&key).into())
                 .decrypt(
-                    Nonce::from_slice(&result.nonce),
+                    &Nonce::try_from(result.nonce.as_slice()).unwrap(),
                     Payload {
                         msg: &result.encrypted_credential,
                         aad: &tampered_aad,
@@ -455,7 +455,7 @@ mod tests {
                 .start_for_source(&message, Some(hostile_source))
                 .unwrap();
             let shared = client.finish(&started.host_message).unwrap();
-            let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&shared).unwrap();
+            let mut confirmation = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&shared).unwrap();
             confirmation.update(CONFIRMATION_DOMAIN);
             confirmation.update(&message);
             confirmation.update(&started.host_message);
@@ -501,7 +501,7 @@ mod tests {
         pairing.start(&second_message).unwrap();
 
         let shared = first_client.finish(&first.host_message).unwrap();
-        let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&shared).unwrap();
+        let mut confirmation = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&shared).unwrap();
         confirmation.update(CONFIRMATION_DOMAIN);
         confirmation.update(&first_message);
         confirmation.update(&first.host_message);
@@ -533,7 +533,7 @@ mod tests {
         );
         let started = pairing.start(&message).unwrap();
         let shared = client.finish(&started.host_message).unwrap();
-        let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&shared).unwrap();
+        let mut confirmation = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&shared).unwrap();
         confirmation.update(CONFIRMATION_DOMAIN);
         confirmation.update(&message);
         confirmation.update(&started.host_message);
@@ -569,7 +569,7 @@ mod tests {
         );
         let started = pairing.start(&message).unwrap();
         let shared = client.finish(&started.host_message).unwrap();
-        let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&shared).unwrap();
+        let mut confirmation = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&shared).unwrap();
         confirmation.update(CONFIRMATION_DOMAIN);
         confirmation.update(&message);
         confirmation.update(&started.host_message);
@@ -660,7 +660,7 @@ mod tests {
         );
         let started = pairing.start(&message).unwrap();
         let shared = client.finish(&started.host_message).unwrap();
-        let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&shared).unwrap();
+        let mut confirmation = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&shared).unwrap();
         confirmation.update(CONFIRMATION_DOMAIN);
         confirmation.update(&message);
         confirmation.update(&started.host_message);
@@ -705,7 +705,8 @@ mod tests {
         );
         let started = pairing.start(&message).unwrap();
         let wrong_shared = client.finish(&started.host_message).unwrap();
-        let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&wrong_shared).unwrap();
+        let mut confirmation =
+            <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&wrong_shared).unwrap();
         confirmation.update(CONFIRMATION_DOMAIN);
         confirmation.update(&message);
         confirmation.update(&started.host_message);
@@ -740,7 +741,8 @@ mod tests {
         );
         let started = pairing.start(&message).unwrap();
         let wrong_shared = client.finish(&started.host_message).unwrap();
-        let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&wrong_shared).unwrap();
+        let mut confirmation =
+            <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&wrong_shared).unwrap();
         confirmation.update(CONFIRMATION_DOMAIN);
         confirmation.update(&message);
         confirmation.update(&started.host_message);

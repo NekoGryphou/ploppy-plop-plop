@@ -548,7 +548,7 @@ mod tests {
         aead::{Aead, Payload},
     };
     use hkdf::Hkdf;
-    use hmac::{Hmac, Mac};
+    use hmac::{Hmac, KeyInit as HmacKeyInit, Mac};
     use sha2::Sha256;
     use spake2::{Ed25519Group, Identity, Password, Spake2};
     use tempfile::tempdir;
@@ -707,7 +707,7 @@ mod tests {
             .unwrap();
         let started = PairResponse::decode(start_bytes).unwrap();
         let shared = client.finish(&started.host_spake2_message).unwrap();
-        let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&shared).unwrap();
+        let mut confirmation = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&shared).unwrap();
         confirmation.update(b"deckymyrig-pairing-confirm-v1\0");
         confirmation.update(&client_message);
         confirmation.update(&started.host_spake2_message);
@@ -1011,7 +1011,7 @@ mod tests {
         assert_eq!(status_code, 200);
         let started = PairResponse::decode(response.as_slice()).unwrap();
         let shared = client.finish(&started.host_spake2_message).unwrap();
-        let mut confirmation = <Hmac<Sha256> as Mac>::new_from_slice(&shared).unwrap();
+        let mut confirmation = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(&shared).unwrap();
         confirmation.update(CONFIRMATION_DOMAIN);
         confirmation.update(&client_message);
         confirmation.update(&started.host_spake2_message);
@@ -1047,7 +1047,7 @@ mod tests {
             .unwrap();
         let credential = ChaCha20Poly1305::new((&key).into())
             .decrypt(
-                Nonce::from_slice(&paired.encryption_nonce),
+                &Nonce::try_from(paired.encryption_nonce.as_slice()).unwrap(),
                 Payload {
                     msg: &paired.encrypted_credential,
                     aad: &crate::pairing::credential_aad(
