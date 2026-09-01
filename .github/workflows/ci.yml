@@ -51,7 +51,8 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with: { node-version: 22, cache: npm, cache-dependency-path: decky/package-lock.json }
       - run: npm --prefix decky ci
-      - run: npm --prefix decky run test:frontend
+      - name: Run frontend tests and publish summary
+        run: ./scripts/ci/run-and-summarize.sh "Plugin frontend tests" npm --prefix decky run test:frontend
 
   plugin-backend-tests:
     name: Plugin backend tests
@@ -62,7 +63,8 @@ jobs:
         with: { node-version: 22, cache: npm, cache-dependency-path: decky/package-lock.json }
       - run: npm --prefix decky ci
       - run: ./scripts/decky/build-decky-deps.sh
-      - run: npm --prefix decky run test:backend
+      - name: Run backend tests and publish summary
+        run: ./scripts/ci/run-and-summarize.sh "Plugin backend tests" env PYTHONPATH=decky/py_modules python3 -B -m unittest discover -s decky/tests/backend -v
 
   plugin-package:
     name: Plugin package
@@ -116,7 +118,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
         with: { toolchain: 1.98.0 }
-      - run: cargo test --manifest-path host/Cargo.toml --all-targets
+      - name: Run host tests and publish summary
+        run: ./scripts/ci/run-and-summarize.sh "Host unit tests" cargo test --manifest-path host/Cargo.toml --all-targets
       - run: cargo build --manifest-path host/Cargo.toml
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -130,7 +133,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
         with: { toolchain: 1.98.0 }
-      - run: cargo test --manifest-path tools/decky-my-rig-test/Cargo.toml --all-targets
+      - name: Run protocol client tests and publish summary
+        run: ./scripts/ci/run-and-summarize.sh "Protocol client unit tests" cargo test --manifest-path tools/decky-my-rig-test/Cargo.toml --all-targets
       - run: cargo build --manifest-path tools/decky-my-rig-test/Cargo.toml
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -149,7 +153,8 @@ jobs:
           path: host/target/debug/decky-my-rig-host
       - run: chmod +x host/target/debug/decky-my-rig-host
       - run: ./scripts/decky/build-decky-deps.sh
-      - run: PYTHONPATH=decky/py_modules python3 -B -m unittest decky.tests.e2e.test_lifecycle decky.tests.e2e.test_multi_pc -v
+      - name: Run lifecycle tests and publish summary
+        run: ./scripts/ci/run-and-summarize.sh "Host lifecycle and multi-PC tests" env PYTHONPATH=decky/py_modules python3 -B -m unittest decky.tests.e2e.test_lifecycle decky.tests.e2e.test_multi_pc -v
 
   protocol-integration:
     name: Cross-language protocol integration
@@ -167,8 +172,10 @@ jobs:
           path: tools/decky-my-rig-test/target/debug/decky-my-rig-test
       - run: chmod +x host/target/debug/decky-my-rig-host tools/decky-my-rig-test/target/debug/decky-my-rig-test
       - run: ./scripts/decky/build-decky-deps.sh
-      - run: ./scripts/protocol/test-e2e.sh
-      - run: ./scripts/decky/test-decky-my-rig-host-integration.sh
+      - name: Run independent protocol tests and publish summary
+        run: ./scripts/ci/run-and-summarize.sh "Independent protocol integration" ./scripts/protocol/test-e2e.sh
+      - name: Run plugin-host integration and publish summary
+        run: ./scripts/ci/run-and-summarize.sh "Plugin-host integration" ./scripts/decky/test-decky-my-rig-host-integration.sh
 
   network-fault-tests:
     name: Network fault and recovery tests
@@ -176,7 +183,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: ./scripts/decky/build-decky-deps.sh
-      - run: REQUIRE_DOCKER=1 ./scripts/check-network.sh
+      - name: Run network fault tests and publish summary
+        run: ./scripts/ci/run-and-summarize.sh "Network fault and recovery tests" env REQUIRE_DOCKER=1 ./scripts/check-network.sh
 
   windows-host:
     name: Windows host build, tests, and installer

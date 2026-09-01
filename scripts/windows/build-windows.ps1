@@ -44,9 +44,6 @@ $BuildOutputDirectory = Join-Path $BuildProjectDirectory "out\host"
 New-Item -ItemType Directory -Force $BuildOutputDirectory | Out-Null
 Push-Location $HostDirectory
 try {
-    cargo fmt --check
-    cargo clippy --all-targets -- -D warnings
-    cargo test
     cargo build --release --target x86_64-pc-windows-msvc
 } finally {
     Pop-Location
@@ -59,8 +56,6 @@ try {
 } finally { Pop-Location }
 $dotnet8Sdks = if (Get-Command dotnet.exe -ErrorAction SilentlyContinue) { @(dotnet.exe --list-sdks | Where-Object { $_ -match '^8\.' }) } else { @() }
 if ($dotnet8Sdks.Count -eq 0) { throw ".NET 8 SDK was not found. Run scripts\setup-windows-build.ps1 first." }
-dotnet.exe test (Join-Path $BuildProjectDirectory "host\control\DeckyMyRigHostControl.Core.Tests\DeckyMyRigHostControl.Core.Tests.csproj") -c Release
-if ($LASTEXITCODE -ne 0) { throw "WinUI model tests failed (exit $LASTEXITCODE)." }
 $SigningThumbprintProperty = if ([string]::IsNullOrWhiteSpace($env:SIGNING_CERTIFICATE_THUMBPRINT)) { "UNCONFIGURED" } else { $env:SIGNING_CERTIFICATE_THUMBPRINT }
 dotnet.exe publish (Join-Path $BuildProjectDirectory "host\control\DeckyMyRigHostControl\DeckyMyRigHostControl.csproj") -c Release -r win-x64 --self-contained true -o $ControlOutputDirectory -p:DeckySigningCertificateThumbprint=$SigningThumbprintProperty
 if ($LASTEXITCODE -ne 0) { throw "DeckyMyRigHostControl publish failed (exit $LASTEXITCODE)." }
